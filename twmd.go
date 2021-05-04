@@ -2,6 +2,7 @@ package main
 
 import (
   "context"
+  "errors"
   "fmt"
   twitterscraper "github.com/n0madic/twitter-scraper"
   "github.com/speedata/optionparser"
@@ -15,6 +16,8 @@ import (
 
 var wg sync.WaitGroup
 var mwg sync.WaitGroup
+var update bool
+var onlyrtw bool
 
 func download(url string, filetype string, output string, dwn_type string) {
   segments := strings.Split(url, "/")
@@ -24,12 +27,26 @@ func download(url string, filetype string, output string, dwn_type string) {
     return
   }
   var f *os.File
+  defer f.Close()
   if dwn_type == "user" {
+    if update {
+      if _, err := os.Stat(output + "/" + filetype + "/" + name); !errors.Is(err, os.ErrNotExist) {
+        fmt.Println(name + ": alrady exist")
+        wg.Done()
+        return
+      }
+    }
     f, _ = os.Create(output + "/" + filetype + "/" + name)
   } else {
+    if update {
+      if _, err := os.Stat(output + "/" + name); !errors.Is(err, os.ErrNotExist) {
+        fmt.Println("File exist")
+        wg.Done()
+        return
+      }
+    }
     f, _ = os.Create(output + "/" + name)
   }
-  defer f.Close()
   defer resp.Body.Close()
   io.Copy(f, resp.Body)
   fmt.Println("Downloaded " + name)
@@ -49,13 +66,15 @@ func videoUser(tweet *twitterscraper.TweetResult, output string, rt bool, dwn_tw
     for _, i := range tweet.Videos {
       j := fmt.Sprintf("%s", i)
       if tweet.IsRetweet {
-        if rt {
+        if rt || onlyrtw {
           v := vidUrl(j)
           wg.Add(1)
           go download(v, "video", output, "user")
         } else {
           continue
         }
+      } else if onlyrtw {
+        continue
       }
       v := vidUrl(j)
       wg.Add(1)
@@ -72,12 +91,14 @@ func photoUser(tweet *twitterscraper.TweetResult, output string, rt bool, dwn_ty
       i := i
       if !strings.Contains(i, "video_thumb/") {
         if tweet.IsRetweet {
-          if rt {
+          if rt || onlyrtw {
             wg.Add(1)
             go download(i, "img", output, "user")
           } else {
             continue
           }
+        } else if onlyrtw {
+          continue
         }
         wg.Add(1)
         go download(i, "img", output, "user")
@@ -128,34 +149,49 @@ func help() {
 usage:
 -h, --help                   Show this help
 -u, --user     USERNAME      User you want to download
--t, --tweet    TWEET_ID      Single tweet to download
--n, --nbr      NBR           Number of tweet to download
+-t, --tweet    TWEET_ID      Single tweet download
+-n, --nbr      NBR           Number of tweets to download
 -i, --img                    Download images only
--v, --video                  Download video only
--r, --retweet                Download retweet
+-v, --video                  Download videos only
+-a, --all                    Download videos and imgs
+-r, --retweet                Download retweet too
+-R, --retweet-only           Download only retweet
+-U, --update                 Downlaod missing tweet only
 -o, --output   DIR           Output direcory
 
 ex:
-twmd -u Spraytrains -o ~/Downlaods -i -v -r -n 300
+twmd -u Spraytrains -o ~/Downlaods -a -r -n 300
+twmd -u Spraytrains -o ~/Downlaods -R -U -n 300
 twmd -t 156170319961391104`)
   os.Exit(1)
 }
 
 func main() {
   var usr, nbr, single, output string
-  var vidz, imgs, retweet bool
+  var vidz, imgs, retweet, all bool
   op := optionparser.NewOptionParser()
-  op.On("-u", "--user USERNAME", "User you want to download media", &usr)
-  op.On("-t", "--tweet TWEET_ID", "Single tweet to download", &single)
-  op.On("-n", "--nbr NBR", "Number of tweet to download", &nbr)
-  op.On("-i", "--img", "Download images only", &imgs)
-  op.On("-v", "--video", "Download video only", &vidz)
-  op.On("-r", "--retweet", "Download retweet", &retweet)
-  op.On("-o", "--output DIR", "Output direcory", &output)
-  op.On("-h", "--help", "Show this help", help)
+  op.On("-u", "--user USERNAME", "", &usr)
+  op.On("-t", "--tweet TWEET_ID", "", &single)
+  op.On("-n", "--nbr NBR", "", &nbr)
+  op.On("-i", "--img", "", &imgs)
+  op.On("-v", "--video", "", &vidz)
+  op.On("-a", "--all", "", &all)
+  op.On("-r", "--retweet", "", &retweet)
+  op.On("-R", "--retweet-only", "", &onlyrtw)
+  op.On("-U", "--update", "", &update)
+  op.On("-o", "--output DIR", "", &output)
+  op.On("-h", "--help", "", help)
   op.Parse()
   if usr == "" && single == "" {
     fmt.Println("You must specify an user (-u --user) or a tweet (-t --tweet)\n")
+    help()
+  }
+  if all {
+    vidz = true
+    imgs = true
+  }
+  if !vidz && !imgs && single == "" {
+    fmt.Println("You must specify what to download. (-i --img) for images, (-v --video) for videos or (-a --all) for both")
     help()
   }
   if single != "" {

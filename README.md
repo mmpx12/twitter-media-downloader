@@ -14,7 +14,10 @@ Unfortunately you will not be able to download more than 3200 tweets.
 -n, --nbr      NBR           Number of tweet to download (default 50)
 -i, --img                    Download images only
 -v, --video                  Download video only
+-a, --all                    Download video and img
 -r, --retweet                Download retweet
+-R, --only-retweet           Download retweet only
+-U, --update                 Downlaod missing tweet only
 -o, --output   DIR           Output direcory
 ```
 
@@ -26,10 +29,12 @@ Unfortunately you will not be able to download more than 3200 tweets.
 If tweet don't contains photo or video nothing will be download but it will be count in the 300.
 
 ```sh
-twmd -u Spraytrains -o ~/Downlaods -i -v -n 3000
+twmd -u Spraytrains -o ~/Downlaods -a -n 3000
 ```
 
-You can add `-r` for download retweets too.
+You can use `-r|--retweet` for download retweets too or `-R|--retweet-only` for downoad retweet only
+
+`-U|--update` will only download missing media.
 
 #### Download a single tweet:
 
