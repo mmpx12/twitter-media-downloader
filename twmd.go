@@ -16,10 +16,14 @@ import (
 
 var wg sync.WaitGroup
 var mwg sync.WaitGroup
+var usr string
 var update bool
 var onlyrtw bool
+var vidz bool
+var imgs bool
 
 func download(url string, filetype string, output string, dwn_type string) {
+  defer wg.Done()
   segments := strings.Split(url, "/")
   name := segments[len(segments)-1]
   resp, _ := http.Get(url)
@@ -32,16 +36,20 @@ func download(url string, filetype string, output string, dwn_type string) {
     if update {
       if _, err := os.Stat(output + "/" + filetype + "/" + name); !errors.Is(err, os.ErrNotExist) {
         fmt.Println(name + ": alrady exist")
-        wg.Done()
         return
       }
     }
-    f, _ = os.Create(output + "/" + filetype + "/" + name)
+    if filetype == "rtimg" {
+      f, _ = os.Create(output + "/img/RE-" + name)
+    } else if filetype == "rtvideo" {
+      f, _ = os.Create(output + "/video/RE-" + name)
+    } else {
+      f, _ = os.Create(output + "/" + filetype + "/" + name)
+    }
   } else {
     if update {
       if _, err := os.Stat(output + "/" + name); !errors.Is(err, os.ErrNotExist) {
         fmt.Println("File exist")
-        wg.Done()
         return
       }
     }
@@ -50,7 +58,6 @@ func download(url string, filetype string, output string, dwn_type string) {
   defer resp.Body.Close()
   io.Copy(f, resp.Body)
   fmt.Println("Downloaded " + name)
-  wg.Done()
 }
 
 func vidUrl(video string) string {
@@ -62,6 +69,7 @@ func vidUrl(video string) string {
 }
 
 func videoUser(tweet *twitterscraper.TweetResult, output string, rt bool, dwn_tweet string) {
+  defer mwg.Done()
   if len(tweet.Videos) > 0 {
     for _, i := range tweet.Videos {
       j := fmt.Sprintf("%s", i)
@@ -82,31 +90,26 @@ func videoUser(tweet *twitterscraper.TweetResult, output string, rt bool, dwn_tw
     }
     wg.Wait()
   }
-  mwg.Done()
 }
 
 func photoUser(tweet *twitterscraper.TweetResult, output string, rt bool, dwn_type string) {
-  if len(tweet.Photos) > 0 {
+  defer mwg.Done()
+  if len(tweet.Photos) > 0 || tweet.IsRetweet {
+    if tweet.IsRetweet && (rt || onlyrtw) {
+      singleTweet(output, tweet.Retweet.ID)
+    }
     for _, i := range tweet.Photos {
+      if onlyrtw || tweet.IsRetweet {
+        continue
+      }
       i := i
       if !strings.Contains(i, "video_thumb/") {
-        if tweet.IsRetweet {
-          if rt || onlyrtw {
-            wg.Add(1)
-            go download(i, "img", output, "user")
-          } else {
-            continue
-          }
-        } else if onlyrtw {
-          continue
-        }
         wg.Add(1)
         go download(i, "img", output, "user")
       }
     }
     wg.Wait()
   }
-  mwg.Done()
 }
 
 func videoSingle(tweet *twitterscraper.Tweet, output string, dwn_tweet string) {
@@ -115,7 +118,11 @@ func videoSingle(tweet *twitterscraper.Tweet, output string, dwn_tweet string) {
       j := fmt.Sprintf("%s", i)
       v := vidUrl(j)
       wg.Add(1)
-      go download(v, "tweet", output, "tweet")
+      if usr != "" {
+        go download(v, "rtvideo", output, "user")
+      } else {
+        go download(v, "tweet", output, "tweet")
+      }
     }
     wg.Wait()
   }
@@ -126,7 +133,11 @@ func photoSingle(tweet *twitterscraper.Tweet, output string, dwn_type string) {
     for _, i := range tweet.Photos {
       if !strings.Contains(i, "video_thumb/") {
         wg.Add(1)
-        download(i, "tweet", output, "tweet")
+        if usr != "" {
+          go download(i, "rtimg", output, "user")
+        } else {
+          go download(i, "tweet", output, "tweet")
+        }
       }
     }
     wg.Wait()
@@ -139,8 +150,17 @@ func singleTweet(output string, id string) {
   if err != nil {
     fmt.Println(err)
   }
-  videoSingle(tweet, output, "tweet")
-  photoSingle(tweet, output, "tweet")
+  if usr != "" {
+    if vidz {
+      videoSingle(tweet, output, "video")
+    }
+    if imgs {
+      photoSingle(tweet, output, "img")
+    }
+  } else {
+    videoSingle(tweet, output, "tweet")
+    photoSingle(tweet, output, "tweet")
+  }
 }
 
 func help() {
@@ -167,8 +187,8 @@ twmd -t 156170319961391104`)
 }
 
 func main() {
-  var usr, nbr, single, output string
-  var vidz, imgs, retweet, all bool
+  var nbr, single, output string
+  var retweet, all bool
   op := optionparser.NewOptionParser()
   op.On("-u", "--user USERNAME", "", &usr)
   op.On("-t", "--tweet TWEET_ID", "", &single)
@@ -204,15 +224,19 @@ func main() {
     os.Exit(0)
   }
   if nbr == "" {
-    nbr = "50"
+    nbr = "3000"
   }
   if output != "" {
     output = output + "/" + usr
   } else {
     output = usr
   }
-  os.MkdirAll(output+"/video", os.ModePerm)
-  os.MkdirAll(output+"/img", os.ModePerm)
+  if vidz {
+    os.MkdirAll(output+"/video", os.ModePerm)
+  }
+  if imgs {
+    os.MkdirAll(output+"/img", os.ModePerm)
+  }
   nbrs, _ := strconv.Atoi(nbr)
   scraper := twitterscraper.New()
   for tweet := range scraper.GetTweets(context.Background(), usr, nbrs) {

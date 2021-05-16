@@ -11,7 +11,7 @@ Unfortunately you will not be able to download more than 3200 tweets.
 -h, --help                   Show this help
 -u, --user     USERNAME      User you want to download
 -t, --tweet    TWEET_ID      Single tweet to download
--n, --nbr      NBR           Number of tweet to download (default 50)
+-n, --nbr      NBR           Number of tweet to download (default 3000)
 -i, --img                    Download images only
 -v, --video                  Download video only
 -a, --all                    Download video and img
