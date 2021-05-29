@@ -1,8 +1,8 @@
 github.com/google/go-cmp v0.5.4 h1:L8R9j+yAqZuZjsqh/z+F1NCffTKKLShY6zXTItVIZ8M=
 github.com/google/go-cmp v0.5.4/go.mod h1:v8dTdLbMG2kIc/vJvl+f65V22dbkXbowE6jgT/gNBxE=
+github.com/mmpx12/optionparser v1.0.2 h1:yNBaLd2f9XRZ1BXnd7DRtKzsAexu7QyhfDhz4daG95o=
+github.com/mmpx12/optionparser v1.0.2/go.mod h1:G0Qw3Z2gTDErfKQv/ur9UKeQANlsmfCbcKjleb39b3w=
 github.com/n0madic/twitter-scraper v0.0.0-20210428094026-3ea1f3b456cd h1:wDvdE6CUr2tQivcG57KgQeRqgFqViE9jDSbb3zbYY5w=
 github.com/n0madic/twitter-scraper v0.0.0-20210428094026-3ea1f3b456cd/go.mod h1:uzFP7WK9gCykBnULzfmxScXgIbs+423tWjbHRLYVq/g=
-github.com/speedata/optionparser v1.0.0 h1:O9Bvoq20BQWMPq0b/id0kBT9oI0njNlHzY/wtQ3JA1o=
-github.com/speedata/optionparser v1.0.0/go.mod h1:AetA6qHxho+CGuukPCm44MsGu+Vvu/fATB/Er9PKmGk=
 golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543 h1:E7g+9GITq07hpfrRu66IVDexMakfv52eLZ2CXBWiKr4=
 golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543/go.mod h1:I/5z698sn9Ka8TeJc9MKroUUfqBBauWjQqLJ2OPfmY0=
