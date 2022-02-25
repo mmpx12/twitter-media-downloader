@@ -2,17 +2,17 @@ build:
 	go build -ldflags="-w -s"
 
 install:
-	mv twmd /usr/bin/twmd
+	mv twitter-media-downloader /usr/bin/twmd
 
 termux-install:
-	mv twmd /data/data/com.termux/files/usr/bin/twmd
+	mv twitter-media-downloader /data/data/com.termux/files/usr/bin/twmd
 
 all: build install
 
 termux-all: build termux-install
 
 clean:
-	rm -f twmd /usr/bin/twmd
+	rm -f twitter-media-downloader /usr/bin/twmd
 
 termux-clean:
-	rm -f twmd /data/data/com.termux/files/usr/bin/twmd
+	rm -f twitter-media-downloader /data/data/com.termux/files/usr/bin/twmd

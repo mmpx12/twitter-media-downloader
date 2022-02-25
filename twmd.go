@@ -96,7 +96,7 @@ func photoUser(tweet *twitterscraper.TweetResult, output string, rt bool, dwn_ty
 	defer mwg.Done()
 	if len(tweet.Photos) > 0 || tweet.IsRetweet {
 		if tweet.IsRetweet && (rt || onlyrtw) {
-			singleTweet(output, tweet.Retweet.ID)
+			singleTweet(output, tweet.ID)
 		}
 		for _, i := range tweet.Photos {
 			if onlyrtw || tweet.IsRetweet {
