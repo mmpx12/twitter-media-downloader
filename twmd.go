@@ -4,14 +4,15 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/mmpx12/optionparser"
-	twitterscraper "github.com/n0madic/twitter-scraper"
 	"io"
 	"net/http"
 	"os"
 	"strconv"
 	"strings"
 	"sync"
+
+	"github.com/mmpx12/optionparser"
+	twitterscraper "github.com/n0madic/twitter-scraper"
 )
 
 var wg sync.WaitGroup
@@ -96,7 +97,7 @@ func photoUser(tweet *twitterscraper.TweetResult, output string, rt bool, dwn_ty
 	defer mwg.Done()
 	if len(tweet.Photos) > 0 || tweet.IsRetweet {
 		if tweet.IsRetweet && (rt || onlyrtw) {
-			singleTweet(output, tweet.Retweet.ID)
+			singleTweet(output, tweet.ID)
 		}
 		for _, i := range tweet.Photos {
 			if onlyrtw || tweet.IsRetweet {
