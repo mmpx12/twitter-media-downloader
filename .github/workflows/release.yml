@@ -1,0 +1,31 @@
+name: release binaries
+
+on:
+  release:
+    types: [created]
+
+jobs:
+  release-binaries:
+    name: release binaries linux/windows/android
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        goos: [linux, windows, android]
+        goarch: ["386", amd64, arm64]
+        exclude:
+          - goarch: 386
+            goos: android
+          - goarch: amd64
+            goos: android
+          - goarch: arm64
+            goos: windows
+    steps:
+    - uses: actions/checkout@v2
+    - uses: wangyoucao577/go-release-action@v1.25
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        goos: ${{ matrix.goos }}
+        goarch: ${{ matrix.goarch }}
+        goversion: "1.17"
+        ldflags: "-w -s"
+        md5sum: FALSE

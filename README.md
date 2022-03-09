@@ -19,6 +19,8 @@ Unfortunately you will not be able to download more than 3200 tweets.
 -R, --only-retweet           Download retweet only
 -U, --update                 Downlaod missing tweet only
 -o, --output   DIR           Output direcory
+-B, --no-banner              Don't print banner
+-V, --version                Print version and exit
 ```
 
 
@@ -43,6 +45,9 @@ twmd -t 156170319961391104
 ```
 
 ### Insallation:
+
+**Note:** If you don't want to build it you can download prebuild binaries [here](https://github.com/mmpx12/twitter-media-downloader/releases/latest).
+
 
 ```sh
 git clone https://github.com/mmpx12/twitter-media-downloader.git
@@ -78,10 +83,10 @@ if grep twitter <<< "$1" >/dev/null; then
   if [[ $(tr -cd '/' <<< "$1" | wc -c) -eq 3 ]]; then
     userid=$(cut -d '/' -f 4 <<< "$1" |  cut -d '?' -f 1)
     echo "$userid"
-    twmd -u "$userid" -o twitter -i -v -n 3000
+    twmd -B -u "$userid" -o twitter -i -v -n 3000
   else 
     postid=$(cut -d '/' -f 6 <<< "$1" |  cut -d '?' -f 1)
-    twmd -t "$postid" -o twitter
+    twmd -B -t "$postid" -o twitter
   fi
 fi
 ```

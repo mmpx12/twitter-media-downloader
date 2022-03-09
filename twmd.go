@@ -15,13 +15,16 @@ import (
 	twitterscraper "github.com/n0madic/twitter-scraper"
 )
 
-var wg sync.WaitGroup
-var mwg sync.WaitGroup
-var usr string
-var update bool
-var onlyrtw bool
-var vidz bool
-var imgs bool
+var (
+	wg      sync.WaitGroup
+	mwg     sync.WaitGroup
+	usr     string
+	update  bool
+	onlyrtw bool
+	vidz    bool
+	imgs    bool
+	version = "1.0.0"
+)
 
 func download(url string, filetype string, output string, dwn_type string) {
 	defer wg.Done()
@@ -166,7 +169,7 @@ func singleTweet(output string, id string) {
 
 func main() {
 	var nbr, single, output string
-	var retweet, all bool
+	var retweet, all, printversion, nologo bool
 	op := optionparser.NewOptionParser()
 	op.Banner = "twmd: Apiless twitter media downloader\n\nUsage:"
 	op.On("-u", "--user USERNAME", "User you want to download", &usr)
@@ -179,10 +182,20 @@ func main() {
 	op.On("-R", "--retweet-only", "Donwload only retweet", &onlyrtw)
 	op.On("-U", "--update", "Download missing tweet only", &update)
 	op.On("-o", "--output DIR", "OUtput directory", &output)
+	op.On("-V", "--version", "Print version and exit", &printversion)
+	op.On("-B", "--no-banner", "Don't print banner", &nologo)
 	op.Exemple("twmd -u Spraytrains -o ~/Downlaods -a -r -n 300")
 	op.Exemple("twmd -u Spraytrains -o ~/Downlaods -R -U -n 300")
 	op.Exemple("twmd -t 156170319961391104")
 	op.Parse()
+
+	if printversion {
+		fmt.Println("version:", version)
+		os.Exit(1)
+	}
+
+	op.Logo("twmd", "elite", nologo)
+
 	if usr == "" && single == "" {
 		fmt.Println("You must specify an user (-u --user) or a tweet (-t --tweet)")
 		op.Help()
