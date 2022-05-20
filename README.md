@@ -17,6 +17,7 @@ Unfortunately you will not be able to download more than 3200 tweets.
 -a, --all                    Download video and img
 -r, --retweet                Download retweet
 -R, --only-retweet           Download retweet only
+-z, --url                    Print media url without download it
 -U, --update                 Downlaod missing tweet only
 -o, --output   DIR           Output direcory
 -B, --no-banner              Don't print banner

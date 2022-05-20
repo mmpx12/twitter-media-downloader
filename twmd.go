@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/mmpx12/optionparser"
 	twitterscraper "github.com/n0madic/twitter-scraper"
@@ -23,13 +24,19 @@ var (
 	onlyrtw bool
 	vidz    bool
 	imgs    bool
-	version = "1.0.0"
+	urlOnly bool
+	version = "1.0.1"
 )
 
 func download(url string, filetype string, output string, dwn_type string) {
 	defer wg.Done()
 	segments := strings.Split(url, "/")
 	name := segments[len(segments)-1]
+	if urlOnly {
+		fmt.Println(url)
+		time.Sleep(2 * time.Millisecond)
+		return
+	}
 	resp, _ := http.Get(url)
 	if resp.StatusCode != 200 {
 		return
@@ -179,6 +186,7 @@ func main() {
 	op.On("-v", "--video", "Download videos only", &vidz)
 	op.On("-a", "--all", "Download images and videos", &all)
 	op.On("-r", "--retweet", "Download retweet too", &retweet)
+	op.On("-z", "--url", "Print media url without download it", &urlOnly)
 	op.On("-R", "--retweet-only", "Donwload only retweet", &onlyrtw)
 	op.On("-U", "--update", "Download missing tweet only", &update)
 	op.On("-o", "--output DIR", "OUtput directory", &output)
