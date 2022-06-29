@@ -1,8 +1,8 @@
-# twmd: twitter media downlaoder (without api key)
+# twmd: twitter media downloader (without api key)
 
-This twitter downlaoader will not require Creds or api key. Its based on [twitter-scrapper](https://github.com/n0madic/twitter-scraper). 
+This twitter downloader doesn't require Credentials or an api key. It's based on [twitter-scrapper](https://github.com/n0madic/twitter-scraper). 
 
-Unfortunately you will not be able to download more than 3200 tweets.
+Unfortunately, you will not be able to download more than 3200 tweets.
 
 
 ## usage: 
@@ -18,24 +18,24 @@ Unfortunately you will not be able to download more than 3200 tweets.
 -r, --retweet                Download retweet
 -R, --only-retweet           Download retweet only
 -z, --url                    Print media url without download it
--U, --update                 Downlaod missing tweet only
--o, --output   DIR           Output direcory
+-U, --update                 Download missing tweet only
+-o, --output   DIR           Output directory
 -B, --no-banner              Don't print banner
 -V, --version                Print version and exit
 ```
 
 
-### Exemples:
+### Examples:
 
 #### Download 300 tweets from @Spraytrains.
 
-If tweet don't contains photo or video nothing will be download but it will be count in the 300.
+If the tweet doesn't contain a photo or video nothing will be downloaded but it will count towards the 300.
 
 ```sh
 twmd -u Spraytrains -o ~/Downlaods -a -n 3000
 ```
 
-You can use `-r|--retweet` for download retweets too or `-R|--retweet-only` for downoad retweet only
+You can use `-r|--retweet` to download retweets as well, or `-R|--retweet-only` to download retweet only
 
 `-U|--update` will only download missing media.
 
@@ -45,9 +45,9 @@ You can use `-r|--retweet` for download retweets too or `-R|--retweet-only` for 
 twmd -t 156170319961391104
 ```
 
-### Insallation:
+### Installation:
 
-**Note:** If you don't want to build it you can download prebuild binaries [here](https://github.com/mmpx12/twitter-media-downloader/releases/latest).
+**Note:** If you don't want to build it you can download prebuilt binaries [here](https://github.com/mmpx12/twitter-media-downloader/releases/latest).
 
 
 ```sh
@@ -76,7 +76,7 @@ make termux-all
 make termux-clean
 ```
 
-You may also want to add stuff in ~/bin/termux-url-opener for automaticly download profile or post when share with termux.
+You may also want to add stuff in ~/bin/termux-url-opener to automatically download profile or post when share with termux.
 
 ```sh
 cd ~/storage/downlaods
@@ -93,7 +93,7 @@ fi
 ```
 
 
-Chech [here](https://gist.github.com/mmpx12/f0741d40909ed3f182fd6f9b33b580d7) for a full termux-url-opener exemple.
+Check [here](https://gist.github.com/mmpx12/f0741d40909ed3f182fd6f9b33b580d7) for a full termux-url-opener example.
 
 
-#### Gif aren't support for the moment.
+#### Gifs are not supported at the moment.
