@@ -25,7 +25,7 @@ var (
 	vidz    bool
 	imgs    bool
 	urlOnly bool
-	version = "1.0.1"
+	version = "1.0.2"
 )
 
 func download(url string, filetype string, output string, dwn_type string) {

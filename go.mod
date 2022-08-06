@@ -1,10 +1,10 @@
 module twmd
 
-go 1.17
+go 1.19
 
 require (
 	github.com/mmpx12/optionparser v1.0.4
-	github.com/n0madic/twitter-scraper v0.0.0-20220124081915-396358bd501b
+	github.com/n0madic/twitter-scraper v0.0.0-20220616082230-d75fe13dd628
 )
 
 require (
