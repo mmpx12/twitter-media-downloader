@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	URL "net/url"
 	"os"
 	"strconv"
 	"strings"
@@ -20,12 +21,13 @@ var (
 	wg      sync.WaitGroup
 	mwg     sync.WaitGroup
 	usr     string
+	proxy   string
 	update  bool
 	onlyrtw bool
 	vidz    bool
 	imgs    bool
 	urlOnly bool
-	version = "1.0.2"
+	version = "1.0.3"
 )
 
 func download(url string, filetype string, output string, dwn_type string) {
@@ -37,7 +39,15 @@ func download(url string, filetype string, output string, dwn_type string) {
 		time.Sleep(2 * time.Millisecond)
 		return
 	}
-	resp, _ := http.Get(url)
+	var resp *http.Response
+	if proxy == "" {
+		resp, _ = http.Get(url)
+	} else {
+		proxyURL, _ := URL.Parse(proxy)
+		transport := &http.Transport{Proxy: http.ProxyURL(proxyURL)}
+		client := &http.Client{Transport: transport}
+		resp, _ = client.Get(url)
+	}
 	if resp.StatusCode != 200 {
 		return
 	}
@@ -157,6 +167,7 @@ func photoSingle(tweet *twitterscraper.Tweet, output string, dwn_type string) {
 
 func singleTweet(output string, id string) {
 	scraper := twitterscraper.New()
+	scraper.SetProxy(proxy)
 	tweet, err := scraper.GetTweet(id)
 	if err != nil {
 		fmt.Println(err)
@@ -180,7 +191,7 @@ func main() {
 	op := optionparser.NewOptionParser()
 	op.Banner = "twmd: Apiless twitter media downloader\n\nUsage:"
 	op.On("-u", "--user USERNAME", "User you want to download", &usr)
-	op.On("-t", "--tweet TWEET_ID", "Single tweet download", &single)
+	op.On("-t", "--tweet TWEET_ID", "Single tweet to download", &single)
 	op.On("-n", "--nbr NBR", "Number of tweets to download", &nbr)
 	op.On("-i", "--img", "Download images only", &imgs)
 	op.On("-v", "--video", "Download videos only", &vidz)
@@ -189,11 +200,13 @@ func main() {
 	op.On("-z", "--url", "Print media url without download it", &urlOnly)
 	op.On("-R", "--retweet-only", "Donwload only retweet", &onlyrtw)
 	op.On("-U", "--update", "Download missing tweet only", &update)
-	op.On("-o", "--output DIR", "OUtput directory", &output)
+	op.On("-o", "--output DIR", "Output directory", &output)
+	op.On("-p", "--proxy PROXY", "Use proxy (proto://ip:port)", &proxy)
 	op.On("-V", "--version", "Print version and exit", &printversion)
 	op.On("-B", "--no-banner", "Don't print banner", &nologo)
 	op.Exemple("twmd -u Spraytrains -o ~/Downlaods -a -r -n 300")
 	op.Exemple("twmd -u Spraytrains -o ~/Downlaods -R -U -n 300")
+	op.Exemple("twmd --proxy socks5://127.0.0.1:9050 -t 156170319961391104")
 	op.Exemple("twmd -t 156170319961391104")
 	op.Parse()
 
@@ -243,6 +256,8 @@ func main() {
 	}
 	nbrs, _ := strconv.Atoi(nbr)
 	scraper := twitterscraper.New()
+	// do nothing if proxy = ""
+	scraper.SetProxy(proxy)
 	for tweet := range scraper.GetTweets(context.Background(), usr, nbrs) {
 		if tweet.Error != nil {
 			fmt.Println(tweet.Error)

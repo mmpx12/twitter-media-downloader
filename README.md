@@ -8,22 +8,23 @@ Unfortunately, you will not be able to download more than 3200 tweets.
 ## usage: 
 
 ```
+Usage:
 -h, --help                   Show this help
 -u, --user     USERNAME      User you want to download
--t, --tweet    TWEET_ID      Single tweet to download
--n, --nbr      NBR           Number of tweet to download (default 3000)
+-t, --tweet    TWEET_ID      Single tweet id to download
+-n, --nbr      NBR           Number of tweets to download
 -i, --img                    Download images only
--v, --video                  Download video only
--a, --all                    Download video and img
--r, --retweet                Download retweet
--R, --only-retweet           Download retweet only
+-v, --video                  Download videos only
+-a, --all                    Download images and videos
+-r, --retweet                Download retweet too
 -z, --url                    Print media url without download it
+-R, --retweet-only           Donwload only retweet
 -U, --update                 Download missing tweet only
 -o, --output   DIR           Output directory
--B, --no-banner              Don't print banner
+-p, --proxy    PROXY         Use proxy (proto://ip:port)
 -V, --version                Print version and exit
+-B, --[no-]banner            Don't print banner
 ```
-
 
 ### Examples:
 
@@ -43,6 +44,14 @@ You can use `-r|--retweet` to download retweets as well, or `-R|--retweet-only` 
 
 ```sh
 twmd -t 156170319961391104
+```
+
+#### Using proxy
+
+Both http and socks4/5 can be used:
+
+```sh
+twmd  --proxy socks5://127.0.0.1:9050 -t 156170319961391104
 ```
 
 ### Installation:
