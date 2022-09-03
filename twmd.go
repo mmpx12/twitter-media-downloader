@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	URL "net/url"
 	"os"
@@ -27,7 +28,8 @@ var (
 	vidz    bool
 	imgs    bool
 	urlOnly bool
-	version = "1.0.3"
+	version = "1.0.4"
+	client  *http.Client
 )
 
 func download(url string, filetype string, output string, dwn_type string) {
@@ -39,18 +41,23 @@ func download(url string, filetype string, output string, dwn_type string) {
 		time.Sleep(2 * time.Millisecond)
 		return
 	}
-	var resp *http.Response
-	if proxy == "" {
-		resp, _ = http.Get(url)
-	} else {
-		proxyURL, _ := URL.Parse(proxy)
-		transport := &http.Transport{Proxy: http.ProxyURL(proxyURL)}
-		client := &http.Client{Transport: transport}
-		resp, _ = client.Get(url)
+	req, err := http.NewRequest("GET", url, nil)
+	req.Header.Add("User-Agent", "Mozilla/5.0 (X11; Linux x86_64)")
+	resp, err := client.Do(req)
+
+	if resp != nil {
+		defer resp.Body.Close()
 	}
-	if resp.StatusCode != 200 {
+	if err != nil {
+		fmt.Println("error")
 		return
 	}
+
+	if resp.StatusCode != 200 {
+		fmt.Println("error")
+		return
+	}
+
 	var f *os.File
 	defer f.Close()
 	if dwn_type == "user" {
@@ -76,7 +83,6 @@ func download(url string, filetype string, output string, dwn_type string) {
 		}
 		f, _ = os.Create(output + "/" + name)
 	}
-	defer resp.Body.Close()
 	io.Copy(f, resp.Body)
 	fmt.Println("Downloaded " + name)
 }
@@ -231,6 +237,26 @@ func main() {
 		op.Help()
 		os.Exit(1)
 	}
+
+	client = &http.Client{
+		Transport: &http.Transport{
+			DialContext: (&net.Dialer{
+				Timeout: time.Duration(5) * time.Second,
+			}).DialContext,
+			TLSHandshakeTimeout:   time.Duration(5) * time.Second,
+			ResponseHeaderTimeout: 5 * time.Second,
+			DisableKeepAlives:     true,
+		},
+	}
+	if proxy != "" {
+		proxyURL, _ := URL.Parse(proxy)
+		client = &http.Client{
+			Transport: &http.Transport{
+				Proxy: http.ProxyURL(proxyURL),
+			},
+		}
+	}
+
 	if single != "" {
 		if output == "" {
 			output = "./"
