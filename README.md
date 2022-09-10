@@ -19,6 +19,8 @@ Usage:
 -r, --retweet                Download retweet too
 -z, --url                    Print media url without download it
 -R, --retweet-only           Donwload only retweet
+-s, --size     SIZE          Choose format between small|normal|large
+                             (default large)
 -U, --update                 Download missing tweet only
 -o, --output   DIR           Output directory
 -p, --proxy    PROXY         Use proxy (proto://ip:port)

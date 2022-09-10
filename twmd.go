@@ -9,6 +9,7 @@ import (
 	"net/http"
 	URL "net/url"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 	"sync"
@@ -28,14 +29,20 @@ var (
 	vidz    bool
 	imgs    bool
 	urlOnly bool
-	version = "1.0.4"
+	version = "1.0.5"
 	client  *http.Client
+	size    = "orig"
 )
 
 func download(url string, filetype string, output string, dwn_type string) {
 	defer wg.Done()
 	segments := strings.Split(url, "/")
 	name := segments[len(segments)-1]
+	re := regexp.MustCompile(`name=`)
+	if re.MatchString(name) {
+		segments := strings.Split(name, "?")
+		name = segments[len(segments)-2]
+	}
 	if urlOnly {
 		fmt.Println(url)
 		time.Sleep(2 * time.Millisecond)
@@ -129,8 +136,10 @@ func photoUser(tweet *twitterscraper.TweetResult, output string, rt bool, dwn_ty
 			if onlyrtw || tweet.IsRetweet {
 				continue
 			}
-			i := i
 			if !strings.Contains(i, "video_thumb/") {
+				if size == "orig" || size == "small" {
+					i = i + "?name=" + size
+				}
 				wg.Add(1)
 				go download(i, "img", output, "user")
 			}
@@ -159,6 +168,9 @@ func photoSingle(tweet *twitterscraper.Tweet, output string, dwn_type string) {
 	if len(tweet.Photos) > 0 {
 		for _, i := range tweet.Photos {
 			if !strings.Contains(i, "video_thumb/") {
+				if size == "orig" || size == "small" {
+					i = i + "?name=" + size
+				}
 				wg.Add(1)
 				if usr != "" {
 					go download(i, "rtimg", output, "user")
@@ -204,7 +216,8 @@ func main() {
 	op.On("-a", "--all", "Download images and videos", &all)
 	op.On("-r", "--retweet", "Download retweet too", &retweet)
 	op.On("-z", "--url", "Print media url without download it", &urlOnly)
-	op.On("-R", "--retweet-only", "Donwload only retweet", &onlyrtw)
+	op.On("-R", "--retweet-only", "Download only retweet", &onlyrtw)
+	op.On("-s", "--size SIZE", "Choose size between small|normal|large (default large)", &size)
 	op.On("-U", "--update", "Download missing tweet only", &update)
 	op.On("-o", "--output DIR", "Output directory", &output)
 	op.On("-p", "--proxy PROXY", "Use proxy (proto://ip:port)", &proxy)
@@ -222,7 +235,6 @@ func main() {
 	}
 
 	op.Logo("twmd", "elite", nologo)
-
 	if usr == "" && single == "" {
 		fmt.Println("You must specify an user (-u --user) or a tweet (-t --tweet)")
 		op.Help()
@@ -236,6 +248,15 @@ func main() {
 		fmt.Println("You must specify what to download. (-i --img) for images, (-v --video) for videos or (-a --all) for both")
 		op.Help()
 		os.Exit(1)
+	}
+
+	re := regexp.MustCompile("small|normal|large")
+	if !re.MatchString(size) && size != "orig" {
+		print("Error in size, setting up to normal\n")
+		size = ""
+	}
+	if size == "large" {
+		size = "orig"
 	}
 
 	client = &http.Client{
