@@ -70,7 +70,7 @@ func download(url string, filetype string, output string, dwn_type string) {
 	if dwn_type == "user" {
 		if update {
 			if _, err := os.Stat(output + "/" + filetype + "/" + name); !errors.Is(err, os.ErrNotExist) {
-				fmt.Println(name + ": alrady exist")
+				fmt.Println(name + ": already exists")
 				return
 			}
 		}
