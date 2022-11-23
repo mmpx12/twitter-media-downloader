@@ -20,8 +20,6 @@ import (
 )
 
 var (
-	wg      sync.WaitGroup
-	mwg     sync.WaitGroup
 	usr     string
 	proxy   string
 	update  bool
@@ -34,7 +32,7 @@ var (
 	size    = "orig"
 )
 
-func download(url string, filetype string, output string, dwn_type string) {
+func download(wg *sync.WaitGroup, url string, filetype string, output string, dwn_type string) {
 	defer wg.Done()
 	segments := strings.Split(url, "/")
 	name := segments[len(segments)-1]
@@ -102,8 +100,9 @@ func vidUrl(video string) string {
 	return vid[0]
 }
 
-func videoUser(tweet *twitterscraper.TweetResult, output string, rt bool, dwn_tweet string) {
-	defer mwg.Done()
+func videoUser(wait *sync.WaitGroup, tweet *twitterscraper.TweetResult, output string, rt bool) {
+	defer wait.Done()
+	wg := sync.WaitGroup{}
 	if len(tweet.Videos) > 0 {
 		for _, i := range tweet.Videos {
 			j := fmt.Sprintf("%s", i)
@@ -111,7 +110,7 @@ func videoUser(tweet *twitterscraper.TweetResult, output string, rt bool, dwn_tw
 				if rt || onlyrtw {
 					v := vidUrl(j)
 					wg.Add(1)
-					go download(v, "video", output, "user")
+					go download(&wg, v, "video", output, "user")
 				} else {
 					continue
 				}
@@ -120,14 +119,15 @@ func videoUser(tweet *twitterscraper.TweetResult, output string, rt bool, dwn_tw
 			}
 			v := vidUrl(j)
 			wg.Add(1)
-			go download(v, "video", output, "user")
+			go download(&wg, v, "video", output, "user")
 		}
 		wg.Wait()
 	}
 }
 
-func photoUser(tweet *twitterscraper.TweetResult, output string, rt bool, dwn_type string) {
-	defer mwg.Done()
+func photoUser(wait *sync.WaitGroup, tweet *twitterscraper.TweetResult, output string, rt bool) {
+	defer wait.Done()
+	wg := sync.WaitGroup{}
 	if len(tweet.Photos) > 0 || tweet.IsRetweet {
 		if tweet.IsRetweet && (rt || onlyrtw) {
 			singleTweet(output, tweet.ID)
@@ -141,41 +141,45 @@ func photoUser(tweet *twitterscraper.TweetResult, output string, rt bool, dwn_ty
 					i = i + "?name=" + size
 				}
 				wg.Add(1)
-				go download(i, "img", output, "user")
+				go download(&wg, i, "img", output, "user")
 			}
 		}
 		wg.Wait()
 	}
 }
 
-func videoSingle(tweet *twitterscraper.Tweet, output string, dwn_tweet string) {
+func videoSingle(tweet *twitterscraper.Tweet, output string) {
 	if len(tweet.Videos) > 0 {
+		wg := sync.WaitGroup{}
 		for _, i := range tweet.Videos {
 			j := fmt.Sprintf("%s", i)
 			v := vidUrl(j)
-			wg.Add(1)
 			if usr != "" {
-				go download(v, "rtvideo", output, "user")
+				wg.Add(1)
+				go download(&wg, v, "rtvideo", output, "user")
 			} else {
-				go download(v, "tweet", output, "tweet")
+				wg.Add(1)
+				go download(&wg, v, "tweet", output, "tweet")
 			}
 		}
 		wg.Wait()
 	}
 }
 
-func photoSingle(tweet *twitterscraper.Tweet, output string, dwn_type string) {
+func photoSingle(tweet *twitterscraper.Tweet, output string) {
 	if len(tweet.Photos) > 0 {
+		wg := sync.WaitGroup{}
 		for _, i := range tweet.Photos {
 			if !strings.Contains(i, "video_thumb/") {
 				if size == "orig" || size == "small" {
 					i = i + "?name=" + size
 				}
-				wg.Add(1)
 				if usr != "" {
-					go download(i, "rtimg", output, "user")
+					wg.Add(1)
+					go download(&wg, i, "rtimg", output, "user")
 				} else {
-					go download(i, "tweet", output, "tweet")
+					wg.Add(1)
+					go download(&wg, i, "tweet", output, "tweet")
 				}
 			}
 		}
@@ -192,14 +196,14 @@ func singleTweet(output string, id string) {
 	}
 	if usr != "" {
 		if vidz {
-			videoSingle(tweet, output, "video")
+			videoSingle(tweet, output)
 		}
 		if imgs {
-			photoSingle(tweet, output, "img")
+			photoSingle(tweet, output)
 		}
 	} else {
-		videoSingle(tweet, output, "tweet")
-		photoSingle(tweet, output, "tweet")
+		videoSingle(tweet, output)
+		photoSingle(tweet, output)
 	}
 }
 
@@ -305,19 +309,20 @@ func main() {
 	scraper := twitterscraper.New()
 	// do nothing if proxy = ""
 	scraper.SetProxy(proxy)
+	wg := sync.WaitGroup{}
 	for tweet := range scraper.GetTweets(context.Background(), usr, nbrs) {
 		if tweet.Error != nil {
 			fmt.Println(tweet.Error)
 			os.Exit(1)
 		}
 		if vidz {
-			mwg.Add(1)
-			go videoUser(tweet, output, retweet, "user")
+			wg.Add(1)
+			go videoUser(&wg, tweet, output, retweet)
 		}
 		if imgs {
-			mwg.Add(1)
-			go photoUser(tweet, output, retweet, "user")
+			wg.Add(1)
+			go photoUser(&wg, tweet, output, retweet)
 		}
 	}
-	mwg.Wait()
+	wg.Wait()
 }
