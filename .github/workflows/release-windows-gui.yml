@@ -1,0 +1,25 @@
+name: release windows gui binarie
+
+on:
+  release:
+    types: [created]
+
+jobs:
+  release-binaries:
+    name: release windows gui binarie
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3.1.0
+    - uses: wangyoucao577/go-release-action@v1.33
+      with:
+        pre_command: "apt update && apt install -y gcc-mingw-w64-x86-64 g++-mingw-w64-x86-64 make"
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        binary_name: "twmd-GUI"
+        goversion: "1.19"
+        overwrite: true
+        retry: 10
+        build_command: "make windows-gui-action"
+        md5sum: FALSE
+        goos: windows
+        goarch: amd64
