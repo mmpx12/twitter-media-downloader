@@ -1,8 +1,10 @@
-# twmd: twitter media downloader (without api key)
+# twmd: CLI & GUI twitter media downloader (without api key)
 
 This twitter downloader doesn't require Credentials or an api key. It's based on [twitter-scrapper](https://github.com/n0madic/twitter-scraper). 
 
 Unfortunately, you will not be able to download more than 3200 tweets.
+
+![gui](.github/screenshots/gui.png)
 
 
 ## usage: 
