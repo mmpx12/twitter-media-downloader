@@ -64,6 +64,8 @@ twmd  --proxy socks5://127.0.0.1:9050 -t 156170319961391104
 **Note:** If you don't want to build it you can download prebuilt binaries [here](https://github.com/mmpx12/twitter-media-downloader/releases/latest).
 
 
+#### Cli:
+
 ```sh
 git clone https://github.com/mmpx12/twitter-media-downloader.git
 cd twitter-media-downloader
@@ -74,6 +76,18 @@ sudo make all
 # Clean
 sudo make clean
 ```
+
+#### Gui:
+
+```sh
+git clone https://github.com/mmpx12/twitter-media-downloader.git
+cd twitter-media-downloader
+# linux
+make linux-gui
+# windows
+make windows-gui
+```
+
 
 #### Termux (no root):
 

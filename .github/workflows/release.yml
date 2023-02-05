@@ -21,11 +21,12 @@ jobs:
             goos: windows
     steps:
     - uses: actions/checkout@v2
-    - uses: wangyoucao577/go-release-action@v1.25
+    - uses: wangyoucao577/go-release-action@v1.35
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         goos: ${{ matrix.goos }}
         goarch: ${{ matrix.goarch }}
-        goversion: "1.17"
+        goversion: "1.20"
+        pre_command: "rm gui.go"
         ldflags: "-w -s"
         md5sum: FALSE
