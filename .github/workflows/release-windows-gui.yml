@@ -10,13 +10,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3.1.0
-    - uses: wangyoucao577/go-release-action@v1.33
+    - uses: actions/checkout@v3
+    - uses: wangyoucao577/go-release-action@v1.38
       with:
         pre_command: "apt update && apt install -y gcc-mingw-w64-x86-64 g++-mingw-w64-x86-64 make"
         github_token: ${{ secrets.GITHUB_TOKEN }}
         binary_name: "twmd-GUI"
-        goversion: "1.19"
+        goversion: "1.20"
         overwrite: true
         retry: 10
         build_command: "make windows-gui-action"

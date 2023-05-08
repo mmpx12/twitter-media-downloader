@@ -27,7 +27,7 @@ var (
 	vidz    bool
 	imgs    bool
 	urlOnly bool
-	version = "1.0.6"
+	version = "1.0.8"
 	client  *http.Client
 	size    = "orig"
 )
