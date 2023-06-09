@@ -27,7 +27,7 @@ var (
 	vidz    bool
 	imgs    bool
 	urlOnly bool
-	version = "1.0.8"
+	version = "1.0.9"
 	client  *http.Client
 	size    = "orig"
 )
@@ -136,12 +136,15 @@ func photoUser(wait *sync.WaitGroup, tweet *twitterscraper.TweetResult, output s
 			if onlyrtw || tweet.IsRetweet {
 				continue
 			}
-			if !strings.Contains(i, "video_thumb/") {
+			var url string
+			if !strings.Contains(i.URL, "video_thumb/") {
 				if size == "orig" || size == "small" {
-					i = i + "?name=" + size
+					url = i.URL + "?name=" + size
+				} else {
+					url = i.URL
 				}
 				wg.Add(1)
-				go download(&wg, i, "img", output, "user")
+				go download(&wg, url, "img", output, "user")
 			}
 		}
 		wg.Wait()
@@ -170,16 +173,20 @@ func photoSingle(tweet *twitterscraper.Tweet, output string) {
 	if len(tweet.Photos) > 0 {
 		wg := sync.WaitGroup{}
 		for _, i := range tweet.Photos {
-			if !strings.Contains(i, "video_thumb/") {
+			fmt.Println(i.URL)
+			var url string
+			if !strings.Contains(i.URL, "video_thumb/") {
 				if size == "orig" || size == "small" {
-					i = i + "?name=" + size
+					url = i.URL + "?name=" + size
+				} else {
+					url = i.URL
 				}
 				if usr != "" {
 					wg.Add(1)
-					go download(&wg, i, "rtimg", output, "user")
+					go download(&wg, url, "rtimg", output, "user")
 				} else {
 					wg.Add(1)
-					go download(&wg, i, "tweet", output, "tweet")
+					go download(&wg, url, "tweet", output, "tweet")
 				}
 			}
 		}
@@ -307,6 +314,7 @@ func main() {
 	}
 	nbrs, _ := strconv.Atoi(nbr)
 	scraper := twitterscraper.New()
+	scraper.WithReplies(true)
 	// do nothing if proxy = ""
 	scraper.SetProxy(proxy)
 	wg := sync.WaitGroup{}

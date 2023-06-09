@@ -91,6 +91,7 @@ func UserTDownload(opt Opts) {
 	}
 	os.MkdirAll(opt.Output+"/"+opt.Username, os.ModePerm)
 	scraper := twitterscraper.New()
+	scraper.WithReplies(true)
 	// do nothing if proxy = ""
 	scraper.SetProxy(opt.Proxy)
 	for tweet := range scraper.GetTweets(context.Background(), opt.Username, opt.Nbr) {
@@ -149,12 +150,15 @@ func photoUser(wg *sync.WaitGroup, tweet *twitterscraper.TweetResult, opt Opts) 
 			if opt.Retweet_only || tweet.IsRetweet {
 				continue
 			}
-			if !strings.Contains(i, "video_thumb/") {
+			var url string
+			if !strings.Contains(i.URL, "video_thumb/") {
 				if quality[opt.Size] == "orig" || quality[opt.Size] == "small" {
-					i = i + "?name=" + quality[opt.Size]
+					url = i.URL + "?name=" + quality[opt.Size]
+				} else {
+					url = i.URL
 				}
 				wg.Add(1)
-				go download(wg, i, opt.Output, opt.Username, GUI)
+				go download(wg, url, opt.Output, opt.Username, GUI)
 			}
 		}
 	}
@@ -242,16 +246,18 @@ func SingleTDownload(wg *sync.WaitGroup, opt Opts, rt bool, batch bool) {
 					return
 				default:
 				}
-
-				if !strings.Contains(i, "video_thumb/") {
+				var url string
+				if !strings.Contains(i.URL, "video_thumb/") {
 					if quality[opt.Size] == "orig" || quality[opt.Size] == "small" {
-						i = i + "?name=" + quality[opt.Size]
+						url = i.URL + "?name=" + quality[opt.Size]
+					} else {
+						url = i.URL
 					}
 					if GUI {
 						wg.Add(1)
-						go download(wg, i, opt.Output, "", true)
+						go download(wg, url, opt.Output, "", true)
 						if !rt && !batch {
-							n := Name(i)
+							n := Name(url)
 							mu.Lock()
 							ui.QueueMain(func() {
 								LogSingle.Append("Downloaded img: " + n + "\n")
@@ -260,7 +266,7 @@ func SingleTDownload(wg *sync.WaitGroup, opt Opts, rt bool, batch bool) {
 						}
 					} else {
 						wg.Add(1)
-						go download(wg, i, opt.Output, "", false)
+						go download(wg, url, opt.Output, "", false)
 					}
 				}
 			}
