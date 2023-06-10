@@ -2,9 +2,11 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
+	"io/fs"
 	"net"
 	"net/http"
 	URL "net/url"
@@ -17,6 +19,7 @@ import (
 
 	"github.com/mmpx12/optionparser"
 	twitterscraper "github.com/n0madic/twitter-scraper"
+	"golang.org/x/term"
 )
 
 var (
@@ -27,7 +30,8 @@ var (
 	vidz    bool
 	imgs    bool
 	urlOnly bool
-	version = "1.0.9"
+	version = "1.10.0"
+	scraper *twitterscraper.Scraper
 	client  *http.Client
 	size    = "orig"
 )
@@ -194,12 +198,48 @@ func photoSingle(tweet *twitterscraper.Tweet, output string) {
 	}
 }
 
+func askPass() {
+	for {
+		var username string
+		fmt.Printf("username: ")
+		fmt.Scanln(&username)
+		fmt.Printf("password: ")
+		pass, _ := term.ReadPassword(int(os.Stdin.Fd()))
+		fmt.Println()
+		scraper.Login(username, string(pass))
+		if scraper.IsLoggedIn() {
+			cookies := scraper.GetCookies()
+			js, _ := json.Marshal(cookies)
+			f, _ := os.OpenFile("twmd_cookies.json", os.O_WRONLY|os.O_TRUNC|os.O_CREATE, 0666)
+			defer f.Close()
+			f.Write(js)
+			break
+		} else {
+			fmt.Println("Bad user/pass")
+		}
+	}
+}
+
+func Login() {
+	if _, err := os.Stat("twmd_cookies.json"); errors.Is(err, fs.ErrNotExist) {
+		askPass()
+	} else {
+		f, _ := os.Open("twmd_cookies.json")
+		var cookies []*http.Cookie
+		json.NewDecoder(f).Decode(&cookies)
+		scraper.SetCookies(cookies)
+	}
+	if !scraper.IsLoggedIn() {
+		askPass()
+	}
+
+}
+
 func singleTweet(output string, id string) {
-	scraper := twitterscraper.New()
-	scraper.SetProxy(proxy)
 	tweet, err := scraper.GetTweet(id)
 	if err != nil {
 		fmt.Println(err)
+		os.Exit(1)
 	}
 	if usr != "" {
 		if vidz {
@@ -216,7 +256,7 @@ func singleTweet(output string, id string) {
 
 func main() {
 	var nbr, single, output string
-	var retweet, all, printversion, nologo bool
+	var retweet, all, printversion, nologo, login bool
 	op := optionparser.NewOptionParser()
 	op.Banner = "twmd: Apiless twitter media downloader\n\nUsage:"
 	op.On("-u", "--user USERNAME", "User you want to download", &usr)
@@ -231,6 +271,7 @@ func main() {
 	op.On("-s", "--size SIZE", "Choose size between small|normal|large (default large)", &size)
 	op.On("-U", "--update", "Download missing tweet only", &update)
 	op.On("-o", "--output DIR", "Output directory", &output)
+	op.On("-L", "--login", "Login (needed for NSFW tweets)", &login)
 	op.On("-p", "--proxy PROXY", "Use proxy (proto://ip:port)", &proxy)
 	op.On("-V", "--version", "Print version and exit", &printversion)
 	op.On("-B", "--no-banner", "Don't print banner", &nologo)
@@ -289,6 +330,13 @@ func main() {
 		}
 	}
 
+	scraper = twitterscraper.New()
+	scraper.WithReplies(true)
+	scraper.SetProxy(proxy)
+	if login {
+		Login()
+	}
+
 	if single != "" {
 		if output == "" {
 			output = "./"
@@ -313,10 +361,6 @@ func main() {
 		os.MkdirAll(output+"/img", os.ModePerm)
 	}
 	nbrs, _ := strconv.Atoi(nbr)
-	scraper := twitterscraper.New()
-	scraper.WithReplies(true)
-	// do nothing if proxy = ""
-	scraper.SetProxy(proxy)
 	wg := sync.WaitGroup{}
 	for tweet := range scraper.GetTweets(context.Background(), usr, nbrs) {
 		if tweet.Error != nil {

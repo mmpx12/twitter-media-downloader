@@ -24,6 +24,7 @@ Usage:
 -s, --size     SIZE          Choose format between small|normal|large
                              (default large)
 -U, --update                 Download missing tweet only
+-L, --login                  Log in to your account
 -o, --output   DIR           Output directory
 -p, --proxy    PROXY         Use proxy (proto://ip:port)
 -V, --version                Print version and exit
@@ -49,6 +50,11 @@ You can use `-r|--retweet` to download retweets as well, or `-R|--retweet-only` 
 ```sh
 twmd -t 156170319961391104
 ```
+
+#### NSFW tweets
+
+You'll need to login `-L|--login` for downloading nsfw tweets.
+
 
 #### Using proxy
 
