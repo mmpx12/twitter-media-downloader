@@ -130,7 +130,7 @@ func SingleTweet() ui.Control {
 		os.Exit(0)
 	})
 
-	stop := ui.NewButton("stop")
+	stop := ui.NewButton("Stop")
 	stop.Disable()
 	stop.OnClicked(func(button *ui.Button) {
 		Stop <- true
@@ -347,7 +347,7 @@ func BatchTweet() ui.Control {
 		os.Exit(0)
 	})
 
-	stop := ui.NewButton("stop")
+	stop := ui.NewButton("Stop")
 	stop.OnClicked(func(button *ui.Button) {
 		Stop <- true
 		close(Stop)
