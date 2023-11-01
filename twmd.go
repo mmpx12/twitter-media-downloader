@@ -216,7 +216,7 @@ func askPass() {
 		}
 		if !scraper.IsLoggedIn() {
 			fmt.Println("Bad user/pass")
-			break
+			continue
 		}
 		cookies := scraper.GetCookies()
 		js, _ := json.Marshal(cookies)
