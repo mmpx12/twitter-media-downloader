@@ -207,16 +207,23 @@ func askPass() {
 		pass, _ := term.ReadPassword(int(os.Stdin.Fd()))
 		fmt.Println()
 		scraper.Login(username, string(pass))
-		if scraper.IsLoggedIn() {
-			cookies := scraper.GetCookies()
-			js, _ := json.Marshal(cookies)
-			f, _ := os.OpenFile("twmd_cookies.json", os.O_WRONLY|os.O_TRUNC|os.O_CREATE, 0666)
-			defer f.Close()
-			f.Write(js)
-			break
-		} else {
-			fmt.Println("Bad user/pass")
+		if !scraper.IsLoggedIn() {
+			var code string
+			fmt.Printf("two-factor: ")
+			fmt.Scanln(&code)
+			fmt.Println()
+			scraper.Login(username, string(pass), code)
 		}
+		if !scraper.IsLoggedIn() {
+			fmt.Println("Bad user/pass")
+			break
+		}
+		cookies := scraper.GetCookies()
+		js, _ := json.Marshal(cookies)
+		f, _ := os.OpenFile("twmd_cookies.json", os.O_WRONLY|os.O_TRUNC|os.O_CREATE, 0666)
+		defer f.Close()
+		f.Write(js)
+		break
 	}
 }
 
