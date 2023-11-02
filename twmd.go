@@ -30,7 +30,7 @@ var (
 	vidz    bool
 	imgs    bool
 	urlOnly bool
-	version = "1.10.3"
+	version = "1.11.0"
 	scraper *twitterscraper.Scraper
 	client  *http.Client
 	size    = "orig"
@@ -198,7 +198,7 @@ func photoSingle(tweet *twitterscraper.Tweet, output string) {
 	}
 }
 
-func askPass() {
+func askPass(twofa bool) {
 	for {
 		var username string
 		fmt.Printf("username: ")
@@ -206,23 +206,31 @@ func askPass() {
 		fmt.Printf("password: ")
 		pass, _ := term.ReadPassword(int(os.Stdin.Fd()))
 		fmt.Println()
-		scraper.Login(username, string(pass))
-		if scraper.IsLoggedIn() {
-			cookies := scraper.GetCookies()
-			js, _ := json.Marshal(cookies)
-			f, _ := os.OpenFile("twmd_cookies.json", os.O_WRONLY|os.O_TRUNC|os.O_CREATE, 0666)
-			defer f.Close()
-			f.Write(js)
-			break
+		if !twofa {
+			scraper.Login(username, string(pass))
 		} else {
-			fmt.Println("Bad user/pass")
+			var code string
+			fmt.Printf("two-factor: ")
+			fmt.Scanln(&code)
+			fmt.Println()
+			scraper.Login(username, string(pass), code)
 		}
+		if !scraper.IsLoggedIn() {
+			fmt.Println("Bad user/pass")
+			continue
+		}
+		cookies := scraper.GetCookies()
+		js, _ := json.Marshal(cookies)
+		f, _ := os.OpenFile("twmd_cookies.json", os.O_WRONLY|os.O_TRUNC|os.O_CREATE, 0666)
+		defer f.Close()
+		f.Write(js)
+		break
 	}
 }
 
-func Login() {
+func Login(twofa bool) {
 	if _, err := os.Stat("twmd_cookies.json"); errors.Is(err, fs.ErrNotExist) {
-		askPass()
+		askPass(twofa)
 	} else {
 		f, _ := os.Open("twmd_cookies.json")
 		var cookies []*http.Cookie
@@ -230,7 +238,7 @@ func Login() {
 		scraper.SetCookies(cookies)
 	}
 	if !scraper.IsLoggedIn() {
-		askPass()
+		askPass(twofa)
 	}
 
 }
@@ -256,7 +264,7 @@ func singleTweet(output string, id string) {
 
 func main() {
 	var nbr, single, output string
-	var retweet, all, printversion, nologo, login bool
+	var retweet, all, printversion, nologo, login, twofa bool
 	op := optionparser.NewOptionParser()
 	op.Banner = "twmd: Apiless twitter media downloader\n\nUsage:"
 	op.On("-u", "--user USERNAME", "User you want to download", &usr)
@@ -272,6 +280,7 @@ func main() {
 	op.On("-U", "--update", "Download missing tweet only", &update)
 	op.On("-o", "--output DIR", "Output directory", &output)
 	op.On("-L", "--login", "Login (needed for NSFW tweets)", &login)
+	op.On("-2", "--2fa", "Use 2fa", &twofa)
 	op.On("-p", "--proxy PROXY", "Use proxy (proto://ip:port)", &proxy)
 	op.On("-V", "--version", "Print version and exit", &printversion)
 	op.On("-B", "--no-banner", "Don't print banner", &nologo)
@@ -334,7 +343,7 @@ func main() {
 	scraper.WithReplies(true)
 	scraper.SetProxy(proxy)
 	if login {
-		Login()
+		Login(twofa)
 	}
 
 	if single != "" {
