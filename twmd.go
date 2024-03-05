@@ -30,7 +30,7 @@ var (
 	vidz    bool
 	imgs    bool
 	urlOnly bool
-	version = "1.11.2"
+	version = "1.11.3"
 	scraper *twitterscraper.Scraper
 	client  *http.Client
 	size    = "orig"
