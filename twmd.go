@@ -17,8 +17,8 @@ import (
 	"sync"
 	"time"
 
+	twitterscraper "github.com/imperatrona/twitter-scraper"
 	"github.com/mmpx12/optionparser"
-	twitterscraper "github.com/n0madic/twitter-scraper"
 	"golang.org/x/term"
 )
 
@@ -30,7 +30,7 @@ var (
 	vidz    bool
 	imgs    bool
 	urlOnly bool
-	version = "1.11.4"
+	version = "1.12.0"
 	scraper *twitterscraper.Scraper
 	client  *http.Client
 	size    = "orig"
@@ -239,8 +239,9 @@ func Login(twofa bool) {
 	}
 	if !scraper.IsLoggedIn() {
 		askPass(twofa)
+	} else {
+		fmt.Println("Logged in")
 	}
-
 }
 
 func singleTweet(output string, id string) {
