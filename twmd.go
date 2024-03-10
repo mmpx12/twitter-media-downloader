@@ -156,6 +156,9 @@ func photoUser(wait *sync.WaitGroup, tweet *twitterscraper.TweetResult, output s
 }
 
 func videoSingle(tweet *twitterscraper.Tweet, output string) {
+	if tweet == nil {
+		return
+	}
 	if len(tweet.Videos) > 0 {
 		wg := sync.WaitGroup{}
 		for _, i := range tweet.Videos {
@@ -174,6 +177,9 @@ func videoSingle(tweet *twitterscraper.Tweet, output string) {
 }
 
 func photoSingle(tweet *twitterscraper.Tweet, output string) {
+	if tweet == nil {
+		return
+	}
 	if len(tweet.Photos) > 0 {
 		wg := sync.WaitGroup{}
 		for _, i := range tweet.Photos {
@@ -249,6 +255,10 @@ func singleTweet(output string, id string) {
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
+	}
+	if tweet == nil {
+		fmt.Println("Error retrieve tweet")
+		return
 	}
 	if usr != "" {
 		if vidz {
