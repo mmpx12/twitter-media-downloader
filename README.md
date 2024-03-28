@@ -39,7 +39,7 @@ Usage:
 If the tweet doesn't contain a photo or video nothing will be downloaded but it will count towards the 300.
 
 ```sh
-twmd -u Spraytrains -o ~/Downlaods -a -n 3000
+twmd -u Spraytrains -o ~/Downlaods -a -n 300
 ```
 
 You can use `-r|--retweet` to download retweets as well, or `-R|--retweet-only` to download retweet only
