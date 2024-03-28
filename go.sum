@@ -1,7 +1,8 @@
 github.com/AlexEidt/Vidio v1.5.1 h1:tovwvtgQagUz1vifiL9OeWkg1fP/XUzFazFKh7tFtaE=
 github.com/AlexEidt/Vidio v1.5.1/go.mod h1:djhIMnWMqPrC3X6nB6ymGX6uWWlgw+VayYGKE1bNwmI=
-github.com/TheTitanrain/w32 v0.0.0-20180517000239-4f5cfb03fabf h1:FPsprx82rdrX2jiKyS17BH6IrTmUBYqZa/CXT4uvb+I=
 github.com/TheTitanrain/w32 v0.0.0-20180517000239-4f5cfb03fabf/go.mod h1:peYoMncQljjNS6tZwI9WVyQB3qZS6u79/N3mBOcnd3I=
+github.com/TheTitanrain/w32 v0.0.0-20200114052255-2654d97dbd3d h1:2xp1BQbqcDDaikHnASWpVZRjibOxu7y9LhAv04whugI=
+github.com/TheTitanrain/w32 v0.0.0-20200114052255-2654d97dbd3d/go.mod h1:peYoMncQljjNS6tZwI9WVyQB3qZS6u79/N3mBOcnd3I=
 github.com/andlabs/ui v0.0.0-20200610043537-70a69d6ae31e h1:wSQCJiig/QkoUnpvelSPbLiZNWvh2yMqQTQvIQqSUkU=
 github.com/andlabs/ui v0.0.0-20200610043537-70a69d6ae31e/go.mod h1:5G2EjwzgZUPnnReoKvPWVneT8APYbyKkihDVAHUi0II=
 github.com/common-nighthawk/go-figure v0.0.0-20210622060536-734e95fb86be h1:J5BL2kskAlV9ckgEsNQXscjIaLiOYiZ75d4e94E6dcQ=
@@ -9,8 +10,8 @@ github.com/common-nighthawk/go-figure v0.0.0-20210622060536-734e95fb86be/go.mod 
 github.com/google/go-cmp v0.5.9/go.mod h1:17dUlkBOakJ0+DkrSSNjCkIjxS6bF9zb3elmeNGIjoY=
 github.com/google/go-cmp v0.6.0 h1:ofyhxvXcZhMsU5ulbFiLKl/XBFqE1GSq7atu8tAmTRI=
 github.com/google/go-cmp v0.6.0/go.mod h1:17dUlkBOakJ0+DkrSSNjCkIjxS6bF9zb3elmeNGIjoY=
-github.com/imperatrona/twitter-scraper v0.0.0-20240309152646-e6d6dc71a98f h1:6YSLFbbkI4x5Vru+as7lrNJH7r6hnEQ+u1Dp1wiKvKk=
-github.com/imperatrona/twitter-scraper v0.0.0-20240309152646-e6d6dc71a98f/go.mod h1:+Z1pca7Faf2tzpHVRnRcratFxy/PuDKj2iaygdgZRLM=
+github.com/imperatrona/twitter-scraper v0.0.0-20240321062442-6a0f92e31498 h1:RXuNC5UJRKa+JZTocOtAKbDBW26yRi+mIcl1hod1nso=
+github.com/imperatrona/twitter-scraper v0.0.0-20240321062442-6a0f92e31498/go.mod h1:+Z1pca7Faf2tzpHVRnRcratFxy/PuDKj2iaygdgZRLM=
 github.com/mmpx12/optionparser v1.1.0 h1:CgfC8WBDxkHOlg9myndDMezNiyXeMzVRDLWDRIjdlf8=
 github.com/mmpx12/optionparser v1.1.0/go.mod h1:1Ub9+E2fDinPCmAU2lCuJcXE8x0HCmkurDv+lcXgRd8=
 github.com/n0madic/twitter-scraper v0.0.0-20231104223941-296710769dd8 h1:yToM7p7HL/WwEESkupFV3Nf7a8d80CHaKRoFNstGA2U=

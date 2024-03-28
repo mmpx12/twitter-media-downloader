@@ -26,6 +26,7 @@ Usage:
 -U, --update                 Download missing tweet only
 -L, --login                  Log in to your account
 -o, --output   DIR           Output directory
+-f, --file-format FORMAT     Formatted name for the downloaded file
 -p, --proxy    PROXY         Use proxy (proto://ip:port)
 -V, --version                Print version and exit
 -B, --[no-]banner            Don't print banner
