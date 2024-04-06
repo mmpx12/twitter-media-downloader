@@ -17,29 +17,29 @@ import (
 	"sync"
 	"time"
 
+	"unicode/utf8"
+
 	twitterscraper "github.com/imperatrona/twitter-scraper"
 	"github.com/mmpx12/optionparser"
 	"golang.org/x/term"
-	"unicode/utf8"
 )
 
 var (
-	usr        string
-	format     string
-	formatName string
-	proxy      string
-	update     bool
-	onlyrtw    bool
-	vidz       bool
-	imgs       bool
-	urlOnly    bool
-	version    = "1.13.0"
-	scraper    *twitterscraper.Scraper
-	client     *http.Client
-	size       = "orig"
+	usr     string
+	format  string
+	proxy   string
+	update  bool
+	onlyrtw bool
+	vidz    bool
+	imgs    bool
+	urlOnly bool
+	version = "1.13.1"
+	scraper *twitterscraper.Scraper
+	client  *http.Client
+	size    = "orig"
 )
 
-func download(wg *sync.WaitGroup, url string, filetype string, output string, dwn_type string) {
+func download(wg *sync.WaitGroup, tweet interface{}, url string, filetype string, output string, dwn_type string) {
 	defer wg.Done()
 	segments := strings.Split(url, "/")
 	name := segments[len(segments)-1]
@@ -49,7 +49,7 @@ func download(wg *sync.WaitGroup, url string, filetype string, output string, dw
 		name = segments[len(segments)-2]
 	}
 	if format != "" {
-		name = formatName + "_" + name
+		name = getFormat(tweet) + "_" + name
 	}
 	if urlOnly {
 		fmt.Println(url)
@@ -120,7 +120,7 @@ func videoUser(wait *sync.WaitGroup, tweet *twitterscraper.TweetResult, output s
 				if rt || onlyrtw {
 					v := vidUrl(j)
 					wg.Add(1)
-					go download(&wg, v, "video", output, "user")
+					go download(&wg, tweet, v, "video", output, "user")
 				} else {
 					continue
 				}
@@ -129,7 +129,7 @@ func videoUser(wait *sync.WaitGroup, tweet *twitterscraper.TweetResult, output s
 			}
 			v := vidUrl(j)
 			wg.Add(1)
-			go download(&wg, v, "video", output, "user")
+			go download(&wg, tweet, v, "video", output, "user")
 		}
 		wg.Wait()
 	}
@@ -154,7 +154,7 @@ func photoUser(wait *sync.WaitGroup, tweet *twitterscraper.TweetResult, output s
 					url = i.URL
 				}
 				wg.Add(1)
-				go download(&wg, url, "img", output, "user")
+				go download(&wg, tweet, url, "img", output, "user")
 			}
 		}
 		wg.Wait()
@@ -172,10 +172,10 @@ func videoSingle(tweet *twitterscraper.Tweet, output string) {
 			v := vidUrl(j)
 			if usr != "" {
 				wg.Add(1)
-				go download(&wg, v, "rtvideo", output, "user")
+				go download(&wg, tweet, v, "rtvideo", output, "user")
 			} else {
 				wg.Add(1)
-				go download(&wg, v, "tweet", output, "tweet")
+				go download(&wg, tweet, v, "tweet", output, "tweet")
 			}
 		}
 		wg.Wait()
@@ -199,10 +199,10 @@ func photoSingle(tweet *twitterscraper.Tweet, output string) {
 				}
 				if usr != "" {
 					wg.Add(1)
-					go download(&wg, url, "rtimg", output, "user")
+					go download(&wg, tweet, url, "rtimg", output, "user")
 				} else {
 					wg.Add(1)
-					go download(&wg, url, "tweet", output, "tweet")
+					go download(&wg, tweet, url, "tweet", output, "tweet")
 				}
 			}
 		}
@@ -266,9 +266,6 @@ func singleTweet(output string, id string) {
 		fmt.Println("Error retrieve tweet")
 		return
 	}
-	if format != "" {
-		getFormat(tweet)
-	}
 	if usr != "" {
 		if vidz {
 			videoSingle(tweet, output)
@@ -282,7 +279,7 @@ func singleTweet(output string, id string) {
 	}
 }
 
-func getFormat(tweet interface{}) {
+func getFormat(tweet interface{}) string {
 	var formatNew string
 	var tweetResult *twitterscraper.TweetResult
 	var tweetObj *twitterscraper.Tweet
@@ -294,7 +291,7 @@ func getFormat(tweet interface{}) {
 		tweetObj = t
 	default:
 		fmt.Println("Invalid tweet type")
-		return
+		return ""
 	}
 
 	formatParts := strings.Split(format, " ")
@@ -304,7 +301,7 @@ func getFormat(tweet interface{}) {
 	regex, err := regexp.Compile(pattern)
 	if err != nil {
 		fmt.Println("Error compiling regular expression:", err)
-		return
+		return ""
 	}
 
 	processText := func(text string, remainingChars int) string {
@@ -401,7 +398,7 @@ func getFormat(tweet interface{}) {
 		}
 	}
 
-	formatName = formatNew
+	return formatNew
 
 }
 
@@ -526,9 +523,6 @@ func main() {
 		if tweet.Error != nil {
 			fmt.Println(tweet.Error)
 			os.Exit(1)
-		}
-		if format != "" {
-			getFormat(tweet)
 		}
 		if vidz {
 			wg.Add(1)
