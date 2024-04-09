@@ -39,8 +39,11 @@ Usage:
 If the tweet doesn't contain a photo or video nothing will be downloaded but it will count towards the 300.
 
 ```sh
-twmd -u Spraytrains -o ~/Downlaods -a -n 3000
+twmd -u Spraytrains -o ~/Downloads -a -n 300
 ```
+
+Due to rate limits of twitter, it is possible to fetch at most 500–600 tweets.
+To fetch as more tweets as possible, change the argument of `-n` to a bigger number, like 3000.
 
 You can use `-r|--retweet` to download retweets as well, or `-R|--retweet-only` to download retweet only
 
