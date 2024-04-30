@@ -25,6 +25,7 @@ Usage:
                              (default large)
 -U, --update                 Download missing tweet only
 -L, --login                  Log in to your account
+-P, --login-plaintext        Plain text Login (needed for NSFW tweets)
 -o, --output   DIR           Output directory
 -f, --file-format FORMAT     Formatted name for the downloaded file
 -p, --proxy    PROXY         Use proxy (proto://ip:port)

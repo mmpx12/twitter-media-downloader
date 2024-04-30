@@ -33,7 +33,7 @@ var (
 	vidz    bool
 	imgs    bool
 	urlOnly bool
-	version = "1.13.1"
+	version = "1.13.2"
 	scraper *twitterscraper.Scraper
 	client  *http.Client
 	size    = "orig"
@@ -210,16 +210,22 @@ func photoSingle(tweet *twitterscraper.Tweet, output string) {
 	}
 }
 
-func askPass(twofa bool) {
+func askPass(loginp, twofa bool) {
 	for {
 		var username string
+		var pass string
 		fmt.Printf("username: ")
 		fmt.Scanln(&username)
 		fmt.Printf("password: ")
-		pass, _ := term.ReadPassword(int(os.Stdin.Fd()))
-		fmt.Println()
+		if loginp {
+			fmt.Scanln(&pass)
+		} else {
+			password, _ := term.ReadPassword(int(os.Stdin.Fd()))
+			fmt.Println()
+			pass = string(password)
+		}
 		if !twofa {
-			scraper.Login(username, string(pass))
+			scraper.Login(username, pass)
 		} else {
 			var code string
 			fmt.Printf("two-factor: ")
@@ -240,9 +246,9 @@ func askPass(twofa bool) {
 	}
 }
 
-func Login(twofa bool) {
+func Login(loginp, twofa bool) {
 	if _, err := os.Stat("twmd_cookies.json"); errors.Is(err, fs.ErrNotExist) {
-		askPass(twofa)
+		askPass(loginp, twofa)
 	} else {
 		f, _ := os.Open("twmd_cookies.json")
 		var cookies []*http.Cookie
@@ -250,7 +256,7 @@ func Login(twofa bool) {
 		scraper.SetCookies(cookies)
 	}
 	if !scraper.IsLoggedIn() {
-		askPass(twofa)
+		askPass(loginp, twofa)
 	} else {
 		fmt.Println("Logged in")
 	}
@@ -404,7 +410,7 @@ func getFormat(tweet interface{}) string {
 
 func main() {
 	var nbr, single, output string
-	var retweet, all, printversion, nologo, login, twofa bool
+	var retweet, all, printversion, nologo, login, loginp, twofa bool
 	op := optionparser.NewOptionParser()
 	op.Banner = "twmd: Apiless twitter media downloader\n\nUsage:"
 	op.On("-u", "--user USERNAME", "User you want to download", &usr)
@@ -421,6 +427,7 @@ func main() {
 	op.On("-o", "--output DIR", "Output directory", &output)
 	op.On("-f", "--file-format FORMAT", "Formatted name for the downloaded file, {DATE} {USERNAME} {NAME} {TITLE} {ID}", &format)
 	op.On("-L", "--login", "Login (needed for NSFW tweets)", &login)
+	op.On("-P", "--login-plaintext", "Plain text login (needed for NSFW tweets)", &loginp)
 	op.On("-2", "--2fa", "Use 2fa", &twofa)
 	op.On("-p", "--proxy PROXY", "Use proxy (proto://ip:port)", &proxy)
 	op.On("-V", "--version", "Print version and exit", &printversion)
@@ -490,8 +497,8 @@ func main() {
 	scraper = twitterscraper.New()
 	scraper.WithReplies(true)
 	scraper.SetProxy(proxy)
-	if login {
-		Login(twofa)
+	if login || loginp {
+		Login(loginp, twofa)
 	}
 
 	if single != "" {
