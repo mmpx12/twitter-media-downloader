@@ -37,6 +37,7 @@ var (
 	scraper *twitterscraper.Scraper
 	client  *http.Client
 	size    = "orig"
+	datefmt = "2006-01-02"
 )
 
 func download(wg *sync.WaitGroup, tweet interface{}, url string, filetype string, output string, dwn_type string) {
@@ -347,7 +348,7 @@ func getFormat(tweet interface{}) string {
 				fmt.Println("Error converting timestamp:", err)
 				return
 			}
-			date := t.Format("2006-01-02")
+			date := t.Format(datefmt)
 			formatNew += date
 
 		case "{NAME}":
@@ -426,6 +427,7 @@ func main() {
 	op.On("-U", "--update", "Download missing tweet only", &update)
 	op.On("-o", "--output DIR", "Output directory", &output)
 	op.On("-f", "--file-format FORMAT", "Formatted name for the downloaded file, {DATE} {USERNAME} {NAME} {TITLE} {ID}", &format)
+	op.On("-d", "--date-format FORMAT", "Apply custom date format. (https://go.dev/src/time/format.go)", &datefmt)
 	op.On("-L", "--login", "Login (needed for NSFW tweets)", &login)
 	op.On("-P", "--login-plaintext", "Plain text login (needed for NSFW tweets)", &loginp)
 	op.On("-2", "--2fa", "Use 2fa", &twofa)
@@ -437,6 +439,7 @@ func main() {
 	op.Exemple("twmd --proxy socks5://127.0.0.1:9050 -t 156170319961391104")
 	op.Exemple("twmd -t 156170319961391104")
 	op.Exemple("twmd -t 156170319961391104 -f \"{DATE} {ID}\"")
+	op.Exemple("twmd -t 156170319961391104 -f \"{DATE} {ID}\" -d \"2006-01-02_15-04-05\"")
 	op.Parse()
 
 	if printversion {

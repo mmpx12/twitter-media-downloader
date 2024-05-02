@@ -28,6 +28,7 @@ Usage:
 -P, --login-plaintext        Plain text Login (needed for NSFW tweets)
 -o, --output   DIR           Output directory
 -f, --file-format FORMAT     Formatted name for the downloaded file
+-d, --date-format FORMAT     Apply custom date format. (https://go.dev/src/time/format.go)
 -p, --proxy    PROXY         Use proxy (proto://ip:port)
 -V, --version                Print version and exit
 -B, --[no-]banner            Don't print banner
