@@ -16,8 +16,9 @@ Usage:
 -t, --tweet    TWEET_ID      Single tweet id to download
 -n, --nbr      NBR           Number of tweets to download
 -i, --img                    Download images only
+-g, --gif                    Download GIFs only (need ffmpeg)
 -v, --video                  Download videos only
--a, --all                    Download images and videos
+-a, --all                    Download images, GIFs(need ffmpeg) and videos
 -r, --retweet                Download retweet too
 -z, --url                    Print media url without download it
 -R, --retweet-only           Donwload only retweet
@@ -38,7 +39,7 @@ Usage:
 
 #### Download 300 tweets from @Spraytrains.
 
-If the tweet doesn't contain a photo or video nothing will be downloaded but it will count towards the 300.
+If the tweet doesn't contain a photo, gif or video nothing will be downloaded but it will count towards the 300.
 
 ```sh
 twmd -u Spraytrains -o ~/Downloads -a -n 300
@@ -56,6 +57,11 @@ You can use `-r|--retweet` to download retweets as well, or `-R|--retweet-only` 
 ```sh
 twmd -t 156170319961391104
 ```
+
+#### Download animated-GIFs:
+
+Animated-GIFs are downloaded as mp4 files.
+If you want to get them as gif files, you need to install ffmpeg.
 
 #### NSFW tweets
 
@@ -134,6 +140,3 @@ fi
 
 
 Check [here](https://gist.github.com/mmpx12/f0741d40909ed3f182fd6f9b33b580d7) for a full termux-url-opener example.
-
-
-#### Gifs are not supported at the moment.
