@@ -35,7 +35,7 @@ var (
 	imgs    bool
 	gifs    bool
 	urlOnly bool
-	version = "1.13.2"
+	version = "1.13.3"
 	scraper *twitterscraper.Scraper
 	client  *http.Client
 	size    = "orig"
@@ -140,34 +140,25 @@ func download(wg *sync.WaitGroup, tweet interface{}, url string, filetype string
 	}
 }
 
-func vidUrl(video string) string {
-	vid := strings.Split(string(video), " ")
-	v := vid[len(vid)-1]
-	v = strings.TrimSuffix(v, "}")
-	vid = strings.Split(v, "?")
-	return vid[0]
-}
-
 func videoUser(wait *sync.WaitGroup, tweet *twitterscraper.TweetResult, output string, rt bool) {
 	defer wait.Done()
 	wg := sync.WaitGroup{}
 	if len(tweet.Videos) > 0 {
 		for _, i := range tweet.Videos {
-			j := fmt.Sprintf("%s", i)
+			url := strings.Split(i.URL, "?")[0]
 			if tweet.IsRetweet {
 				if rt || onlyrtw {
-					v := vidUrl(j)
 					wg.Add(1)
-					go download(&wg, tweet, v, "video", output, "user")
+					go download(&wg, tweet, url, "video", output, "user")
+					continue
 				} else {
 					continue
 				}
 			} else if onlyrtw {
 				continue
 			}
-			v := vidUrl(j)
 			wg.Add(1)
-			go download(&wg, tweet, v, "video", output, "user")
+			go download(&wg, tweet, url, "video", output, "user")
 		}
 		wg.Wait()
 	}
@@ -224,14 +215,13 @@ func videoSingle(tweet *twitterscraper.Tweet, output string) {
 	if len(tweet.Videos) > 0 {
 		wg := sync.WaitGroup{}
 		for _, i := range tweet.Videos {
-			j := fmt.Sprintf("%s", i)
-			v := vidUrl(j)
+			url := strings.Split(i.URL, "?")[0]
 			if usr != "" {
 				wg.Add(1)
-				go download(&wg, tweet, v, "rtvideo", output, "user")
+				go download(&wg, tweet, url, "rtvideo", output, "user")
 			} else {
 				wg.Add(1)
-				go download(&wg, tweet, v, "tweet", output, "tweet")
+				go download(&wg, tweet, url, "tweet", output, "tweet")
 			}
 		}
 		wg.Wait()
