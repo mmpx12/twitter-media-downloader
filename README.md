@@ -21,6 +21,7 @@ Usage:
 -r, --retweet                Download retweet too
 -z, --url                    Print media url without download it
 -R, --retweet-only           Donwload only retweet
+-M, --mediatweet-only        Donwload only media tweet
 -s, --size     SIZE          Choose format between small|normal|large
                              (default large)
 -U, --update                 Download missing tweet only
