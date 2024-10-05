@@ -30,10 +30,11 @@ var (
 	proxy   string
 	update  bool
 	onlyrtw bool
+	onlymtw bool
 	vidz    bool
 	imgs    bool
 	urlOnly bool
-	version = "1.13.3"
+	version = "1.13.4"
 	scraper *twitterscraper.Scraper
 	client  *http.Client
 	size    = "orig"
@@ -413,6 +414,7 @@ func main() {
 	op.On("-r", "--retweet", "Download retweet too", &retweet)
 	op.On("-z", "--url", "Print media url without download it", &urlOnly)
 	op.On("-R", "--retweet-only", "Download only retweet", &onlyrtw)
+	op.On("-M", "--mediatweet-only", "Download only media tweet", &onlymtw)
 	op.On("-s", "--size SIZE", "Choose size between small|normal|large (default large)", &size)
 	op.On("-U", "--update", "Download missing tweet only", &update)
 	op.On("-o", "--output DIR", "Output directory", &output)
@@ -519,7 +521,15 @@ func main() {
 	}
 	nbrs, _ := strconv.Atoi(nbr)
 	wg := sync.WaitGroup{}
-	for tweet := range scraper.GetTweets(context.Background(), usr, nbrs) {
+
+	var tweets <-chan *twitterscraper.TweetResult
+	if onlymtw {
+		tweets = scraper.GetMediaTweets(context.Background(), usr, nbrs)
+	} else {
+		tweets = scraper.GetTweets(context.Background(), usr, nbrs)
+	}
+
+	for tweet := range tweets {
 		if tweet.Error != nil {
 			fmt.Println(tweet.Error)
 			os.Exit(1)
