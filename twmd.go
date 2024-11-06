@@ -34,7 +34,7 @@ var (
 	vidz    bool
 	imgs    bool
 	urlOnly bool
-	version = "1.13.4"
+	version = "1.13.5"
 	scraper *twitterscraper.Scraper
 	client  *http.Client
 	size    = "orig"
@@ -217,7 +217,10 @@ func askPass(loginp, twofa bool) {
 			pass = string(password)
 		}
 		if !twofa {
-			scraper.Login(username, pass)
+			err := scraper.Login(username, pass)
+			if err != nil {
+				fmt.Println(err)
+			}
 		} else {
 			var code string
 			fmt.Printf("two-factor: ")
