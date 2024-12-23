@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"context"
 	"encoding/json"
 	"errors"
@@ -16,7 +17,6 @@ import (
 	"strings"
 	"sync"
 	"time"
-
 	"unicode/utf8"
 
 	twitterscraper "github.com/imperatrona/twitter-scraper"
@@ -34,7 +34,7 @@ var (
 	vidz    bool
 	imgs    bool
 	urlOnly bool
-	version = "1.13.6"
+	version = "1.13.7"
 	scraper *twitterscraper.Scraper
 	client  *http.Client
 	size    = "orig"
@@ -76,7 +76,6 @@ func download(wg *sync.WaitGroup, tweet interface{}, url string, filetype string
 	}
 
 	var f *os.File
-	defer f.Close()
 	if dwn_type == "user" {
 		if update {
 			if _, err := os.Stat(output + "/" + filetype + "/" + name); !errors.Is(err, os.ErrNotExist) {
@@ -100,6 +99,7 @@ func download(wg *sync.WaitGroup, tweet interface{}, url string, filetype string
 		}
 		f, _ = os.Create(output + "/" + name)
 	}
+	defer f.Close()
 	io.Copy(f, resp.Body)
 	fmt.Println("Downloaded " + name)
 }
@@ -181,7 +181,6 @@ func photoSingle(tweet *twitterscraper.Tweet, output string) {
 	if len(tweet.Photos) > 0 {
 		wg := sync.WaitGroup{}
 		for _, i := range tweet.Photos {
-			fmt.Println(i.URL)
 			var url string
 			if !strings.Contains(i.URL, "video_thumb/") {
 				if size == "orig" || size == "small" {
@@ -200,6 +199,36 @@ func photoSingle(tweet *twitterscraper.Tweet, output string) {
 		}
 		wg.Wait()
 	}
+}
+
+func processCookieString(cookieStr string) []*http.Cookie {
+	cookiePairs := strings.Split(cookieStr, "; ")
+	cookies := make([]*http.Cookie, 0)
+	expiresTime := time.Now().AddDate(1, 0, 0)
+
+	for _, pair := range cookiePairs {
+		parts := strings.SplitN(pair, "=", 2)
+		if len(parts) != 2 {
+			continue
+		}
+
+		name := parts[0]
+		value := parts[1]
+		value = strings.Trim(value, "\"")
+
+		cookie := &http.Cookie{
+			Name:     name,
+			Value:    value,
+			Path:     "/",
+			Domain:   ".twitter.com",
+			Expires:  expiresTime,
+			HttpOnly: true,
+			Secure:   true,
+		}
+
+		cookies = append(cookies, cookie)
+	}
+	return cookies
 }
 
 func askPass(loginp, twofa bool) {
@@ -241,17 +270,47 @@ func askPass(loginp, twofa bool) {
 	}
 }
 
-func Login(loginp, twofa bool) {
-	if _, err := os.Stat("twmd_cookies.json"); errors.Is(err, fs.ErrNotExist) {
-		askPass(loginp, twofa)
+func Login(loginp, twofa bool, useCookies bool) {
+	if useCookies {
+		if _, err := os.Stat("twmd_cookies.json"); errors.Is(err, fs.ErrNotExist) {
+			fmt.Print("Enter cookies string: ")
+			var cookieStr string
+			cookieStr, _ = bufio.NewReader(os.Stdin).ReadString('\n')
+			cookieStr = strings.TrimSpace(cookieStr)
+
+			cookies := processCookieString(cookieStr)
+			scraper.SetCookies(cookies)
+
+			// Save cookies to file
+			js, _ := json.MarshalIndent(cookies, "", "  ")
+			f, _ := os.OpenFile("twmd_cookies.json", os.O_WRONLY|os.O_TRUNC|os.O_CREATE, 0666)
+			defer f.Close()
+			f.Write(js)
+		} else {
+			f, _ := os.Open("twmd_cookies.json")
+			var cookies []*http.Cookie
+			json.NewDecoder(f).Decode(&cookies)
+			scraper.SetCookies(cookies)
+		}
 	} else {
-		f, _ := os.Open("twmd_cookies.json")
-		var cookies []*http.Cookie
-		json.NewDecoder(f).Decode(&cookies)
-		scraper.SetCookies(cookies)
+		if _, err := os.Stat("twmd_cookies.json"); errors.Is(err, fs.ErrNotExist) {
+			askPass(loginp, twofa)
+		} else {
+			f, _ := os.Open("twmd_cookies.json")
+			var cookies []*http.Cookie
+			json.NewDecoder(f).Decode(&cookies)
+			scraper.SetCookies(cookies)
+		}
 	}
+
 	if !scraper.IsLoggedIn() {
-		askPass(loginp, twofa)
+		if useCookies {
+			fmt.Println("Invalid cookies. Please try again.")
+			os.Remove("twmd_cookies.json")
+			Login(loginp, twofa, useCookies)
+		} else {
+			askPass(loginp, twofa)
+		}
 	} else {
 		fmt.Println("Logged in")
 	}
@@ -400,12 +459,11 @@ func getFormat(tweet interface{}) string {
 	}
 
 	return formatNew
-
 }
 
 func main() {
 	var nbr, single, output string
-	var retweet, all, printversion, nologo, login, loginp, twofa bool
+	var retweet, all, printversion, nologo, login, loginp, twofa, useCookies bool
 	op := optionparser.NewOptionParser()
 	op.Banner = "twmd: Apiless twitter media downloader\n\nUsage:"
 	op.On("-u", "--user USERNAME", "User you want to download", &usr)
@@ -426,11 +484,12 @@ func main() {
 	op.On("-L", "--login", "Login (needed for NSFW tweets)", &login)
 	op.On("-P", "--login-plaintext", "Plain text login (needed for NSFW tweets)", &loginp)
 	op.On("-2", "--2fa", "Use 2fa", &twofa)
+	op.On("-C", "--cookies", "Use cookies for authentication", &useCookies)
 	op.On("-p", "--proxy PROXY", "Use proxy (proto://ip:port)", &proxy)
 	op.On("-V", "--version", "Print version and exit", &printversion)
 	op.On("-B", "--no-banner", "Don't print banner", &nologo)
-	op.Exemple("twmd -u Spraytrains -o ~/Downlaods -a -r -n 300")
-	op.Exemple("twmd -u Spraytrains -o ~/Downlaods -R -U -n 300")
+	op.Exemple("twmd -u Spraytrains -o ~/Downloads -a -r -n 300")
+	op.Exemple("twmd -u Spraytrains -o ~/Downloads -R -U -n 300")
 	op.Exemple("twmd --proxy socks5://127.0.0.1:9050 -t 156170319961391104")
 	op.Exemple("twmd -t 156170319961391104")
 	op.Exemple("twmd -t 156170319961391104 -f \"{DATE} {ID}\"")
@@ -495,8 +554,10 @@ func main() {
 	scraper = twitterscraper.New()
 	scraper.WithReplies(true)
 	scraper.SetProxy(proxy)
-	if login || loginp {
-		Login(loginp, twofa)
+
+	// Modified login handling
+	if login || loginp || useCookies {
+		Login(loginp, twofa, useCookies)
 	}
 
 	if single != "" {

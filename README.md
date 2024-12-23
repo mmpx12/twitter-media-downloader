@@ -33,6 +33,7 @@ Usage:
 -p, --proxy    PROXY         Use proxy (proto://ip:port)
 -V, --version                Print version and exit
 -B, --[no-]banner            Don't print banner
+-C, --cookies                Use cookies for authentication
 ```
 
 ### Examples:
@@ -60,7 +61,7 @@ twmd -t 156170319961391104
 
 #### NSFW tweets
 
-You'll need to login `-L|--login` for downloading nsfw tweets.
+You'll need to login `-L|--login` for downloading nsfw tweets. Or you can provide cookies `-C|--cookies` to complete the login.
 
 
 #### Using proxy
