@@ -2,7 +2,10 @@
 
 This twitter downloader doesn't require Credentials or an api key. It's based on [twitter-scrapper](https://github.com/imperatrona/twitter-scraper).
 
-Unfortunately, you will not be able to download more than 3200 tweets.
+### Note
+For NSFW or private accounts, you will need to logged in (-L). Username ans password login isn't supported anymore. You'll have to logged in in a browser and copy auth_token and ct0 cookies (right click => inspect => storage => cookies).
+It will create a twmd_cookies.json so you will not have to enter these cookies everytime.
+
 
 ![gui](.github/screenshots/gui.png)
 **Note:** Gui is not longer maintained.
@@ -12,28 +15,29 @@ Unfortunately, you will not be able to download more than 3200 tweets.
 ```
 Usage:
 -h, --help                   Show this help
--u, --user     USERNAME      User you want to download
--t, --tweet    TWEET_ID      Single tweet id to download
--n, --nbr      NBR           Number of tweets to download
+-u, --user=USERNAME          User you want to download
+-t, --tweet=TWEET_ID         Single tweet to download
+-n, --nbr=NBR                Number of tweets to download
 -i, --img                    Download images only
 -v, --video                  Download videos only
 -a, --all                    Download images and videos
 -r, --retweet                Download retweet too
 -z, --url                    Print media url without download it
--R, --retweet-only           Donwload only retweet
--M, --mediatweet-only        Donwload only media tweet
--s, --size     SIZE          Choose format between small|normal|large
-                             (default large)
+-R, --retweet-only           Download only retweet
+-M, --mediatweet-only        Download only media tweet
+-s, --size=SIZE              Choose size between small|normal|large (default
+                             large)
 -U, --update                 Download missing tweet only
--L, --login                  Log in to your account
--P, --login-plaintext        Plain text Login (needed for NSFW tweets)
--o, --output   DIR           Output directory
--f, --file-format FORMAT     Formatted name for the downloaded file
--d, --date-format FORMAT     Apply custom date format. (https://go.dev/src/time/format.go)
--p, --proxy    PROXY         Use proxy (proto://ip:port)
--V, --version                Print version and exit
--B, --[no-]banner            Don't print banner
+-o, --output=DIR             Output directory
+-f, --file-format=FORMAT     Formatted name for the downloaded file, {DATE}
+                             {USERNAME} {NAME} {TITLE} {ID}
+-d, --date-format=FORMAT     Apply custom date format.
+                             (https://go.dev/src/time/format.go)
+-L, --login                  Login (needed for NSFW tweets)
 -C, --cookies                Use cookies for authentication
+-p, --proxy=PROXY            Use proxy (proto://ip:port)
+-V, --version                Print version and exit
+-B, --no-banner              Don't print banner
 ```
 
 ### Examples:

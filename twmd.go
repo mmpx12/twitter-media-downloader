@@ -21,7 +21,6 @@ import (
 
 	twitterscraper "github.com/imperatrona/twitter-scraper"
 	"github.com/mmpx12/optionparser"
-	"golang.org/x/term"
 )
 
 var (
@@ -34,7 +33,7 @@ var (
 	vidz    bool
 	imgs    bool
 	urlOnly bool
-	version = "1.13.7"
+	version = "1.13.8"
 	scraper *twitterscraper.Scraper
 	client  *http.Client
 	size    = "orig"
@@ -231,35 +230,24 @@ func processCookieString(cookieStr string) []*http.Cookie {
 	return cookies
 }
 
-func askPass(loginp, twofa bool) {
+func askPass() {
 	for {
-		var username string
-		var pass string
-		fmt.Printf("username: ")
-		fmt.Scanln(&username)
-		fmt.Printf("password: ")
-		if loginp {
-			fmt.Scanln(&pass)
+		var auth_token, ct0 string
+		fmt.Println(`=====================
+    User/pass login is no more supported,
+    Logged in in browser and find auth_token and ct0 cookies.
+    (via inspect=>storage=>cookie)
+==================\n`)
+		fmt.Printf("auth_token cookie: ")
+		fmt.Scanln(&auth_token)
+		fmt.Printf("ct0 cookie: ")
+		fmt.Scanln(&ct0)
+		scraper.SetAuthToken(twitterscraper.AuthToken{Token: auth_token, CSRFToken: ct0})
+		if scraper.IsLoggedIn() {
+			fmt.Println("logged in")
 		} else {
-			password, _ := term.ReadPassword(int(os.Stdin.Fd()))
-			fmt.Println()
-			pass = string(password)
-		}
-		if !twofa {
-			err := scraper.Login(username, pass)
-			if err != nil {
-				fmt.Println(err)
-			}
-		} else {
-			var code string
-			fmt.Printf("two-factor: ")
-			fmt.Scanln(&code)
-			fmt.Println()
-			scraper.Login(username, string(pass), code)
-		}
-		if !scraper.IsLoggedIn() {
-			fmt.Println("Bad user/pass")
-			continue
+			fmt.Println("Bad Cookies.")
+			askPass()
 		}
 		cookies := scraper.GetCookies()
 		js, _ := json.Marshal(cookies)
@@ -270,7 +258,7 @@ func askPass(loginp, twofa bool) {
 	}
 }
 
-func Login(loginp, twofa bool, useCookies bool) {
+func Login(useCookies bool) {
 	if useCookies {
 		if _, err := os.Stat("twmd_cookies.json"); errors.Is(err, fs.ErrNotExist) {
 			fmt.Print("Enter cookies string: ")
@@ -291,10 +279,11 @@ func Login(loginp, twofa bool, useCookies bool) {
 			var cookies []*http.Cookie
 			json.NewDecoder(f).Decode(&cookies)
 			scraper.SetCookies(cookies)
+			fmt.Println(scraper.IsLoggedIn())
 		}
 	} else {
 		if _, err := os.Stat("twmd_cookies.json"); errors.Is(err, fs.ErrNotExist) {
-			askPass(loginp, twofa)
+			askPass()
 		} else {
 			f, _ := os.Open("twmd_cookies.json")
 			var cookies []*http.Cookie
@@ -307,12 +296,10 @@ func Login(loginp, twofa bool, useCookies bool) {
 		if useCookies {
 			fmt.Println("Invalid cookies. Please try again.")
 			os.Remove("twmd_cookies.json")
-			Login(loginp, twofa, useCookies)
+			Login(useCookies)
 		} else {
-			askPass(loginp, twofa)
+			askPass()
 		}
-	} else {
-		fmt.Println("Logged in")
 	}
 }
 
@@ -463,7 +450,7 @@ func getFormat(tweet interface{}) string {
 
 func main() {
 	var nbr, single, output string
-	var retweet, all, printversion, nologo, login, loginp, twofa, useCookies bool
+	var retweet, all, printversion, nologo, login, useCookies bool
 	op := optionparser.NewOptionParser()
 	op.Banner = "twmd: Apiless twitter media downloader\n\nUsage:"
 	op.On("-u", "--user USERNAME", "User you want to download", &usr)
@@ -482,8 +469,6 @@ func main() {
 	op.On("-f", "--file-format FORMAT", "Formatted name for the downloaded file, {DATE} {USERNAME} {NAME} {TITLE} {ID}", &format)
 	op.On("-d", "--date-format FORMAT", "Apply custom date format. (https://go.dev/src/time/format.go)", &datefmt)
 	op.On("-L", "--login", "Login (needed for NSFW tweets)", &login)
-	op.On("-P", "--login-plaintext", "Plain text login (needed for NSFW tweets)", &loginp)
-	op.On("-2", "--2fa", "Use 2fa", &twofa)
 	op.On("-C", "--cookies", "Use cookies for authentication", &useCookies)
 	op.On("-p", "--proxy PROXY", "Use proxy (proto://ip:port)", &proxy)
 	op.On("-V", "--version", "Print version and exit", &printversion)
@@ -556,8 +541,8 @@ func main() {
 	scraper.SetProxy(proxy)
 
 	// Modified login handling
-	if login || loginp || useCookies {
-		Login(loginp, twofa, useCookies)
+	if login || useCookies {
+		Login(useCookies)
 	}
 
 	if single != "" {
