@@ -33,7 +33,7 @@ var (
 	vidz    bool
 	imgs    bool
 	urlOnly bool
-	version = "1.14.0"
+	version = "1.14.1"
 	scraper *twitterscraper.Scraper
 	client  *http.Client
 	size    = "orig"
@@ -219,7 +219,7 @@ func processCookieString(cookieStr string) []*http.Cookie {
 			Name:     name,
 			Value:    value,
 			Path:     "/",
-			Domain:   ".twitter.com",
+			Domain:   ".x.com",
 			Expires:  expiresTime,
 			HttpOnly: true,
 			Secure:   true,
@@ -344,111 +344,52 @@ func getFormat(tweet interface{}) string {
 		return ""
 	}
 
-	formatParts := strings.Split(format, " ")
-
-	pattern := `[/\\:*?\"<>|]`
-
+	pattern := `[/\\:*?"<>|]`
 	regex, err := regexp.Compile(pattern)
 	if err != nil {
 		fmt.Println("Error compiling regular expression:", err)
 		return ""
 	}
 
-	processText := func(text string, remainingChars int) string {
-		result := ""
-		for _, char := range text {
-			charStr := string(char)
-			if regex.MatchString(charStr) {
-				if utf8.RuneCountInString(result)+1 > remainingChars {
-					break
-				}
-				result += "_"
-				remainingChars--
-			} else if utf8.RuneCountInString(result)+1 <= remainingChars {
-				result += charStr
-				remainingChars--
-			} else {
-				break
-			}
-		}
-		return result
+	replacer := map[string]string{}
+
+	if tweetResult != nil {
+		replacer["{DATE}"] = time.Unix(tweetResult.Timestamp, 0).Format(datefmt)
+		replacer["{NAME}"] = tweetResult.Name
+		replacer["{USERNAME}"] = tweetResult.Username
+		replacer["{TITLE}"] = sanitizeText(tweetResult.Text, regex, 255)
+		replacer["{ID}"] = tweetResult.ID
+	} else if tweetObj != nil {
+		replacer["{DATE}"] = time.Unix(tweetObj.Timestamp, 0).Format(datefmt)
+		replacer["{NAME}"] = tweetObj.Name
+		replacer["{USERNAME}"] = tweetObj.Username
+		replacer["{TITLE}"] = sanitizeText(tweetObj.Text, regex, 255)
+		replacer["{ID}"] = tweetObj.ID
 	}
 
-	processPart := func(part string) {
-		switch part {
-		case "{DATE}":
-			var timestamp int64
-			if tweetResult != nil {
-				timestamp = tweetResult.Timestamp
-			} else if tweetObj != nil {
-				timestamp = tweetObj.Timestamp
-			} else {
-				fmt.Println("Error converting timestamp:", err)
-				return
-			}
-			t := time.Unix(timestamp, 0)
-			if err != nil {
-				fmt.Println("Error converting timestamp:", err)
-				return
-			}
-			date := t.Format(datefmt)
-			formatNew += date
+	formatNew = format
 
-		case "{NAME}":
-			if tweetResult != nil {
-				formatNew += tweetResult.Name
-			} else if tweetObj != nil {
-				formatNew += tweetObj.Name
-			}
-
-		case "{USERNAME}":
-			if tweetResult != nil {
-				formatNew += tweetResult.Username
-			} else if tweetObj != nil {
-				formatNew += tweetObj.Username
-			}
-
-		case "{TITLE}":
-			var text string
-			var remainingChars int
-
-			if tweetResult != nil {
-				text = strings.ReplaceAll(tweetResult.Text, "/", "_")
-				remainingChars = 255 - len(formatNew) - len(tweetResult.Name) - len(tweetResult.Username) - len(tweetResult.ID)
-			} else if tweetObj != nil {
-				text = strings.ReplaceAll(tweetObj.Text, "/", "_")
-				remainingChars = 251 - len(formatNew) - len(tweetObj.ID) - 4
-			}
-
-			if text == "" {
-				formatNew += ""
-			} else if remainingChars > 0 && len(text) > remainingChars {
-				formatNew += processText(text, remainingChars)
-			} else {
-				formatNew += text
-			}
-
-		case "{ID}":
-			if tweetResult != nil {
-				formatNew += tweetResult.ID
-			} else if tweetObj != nil {
-				formatNew += tweetObj.ID
-			}
-		default:
-			fmt.Println("Invalid format part")
-			return
-		}
-	}
-
-	for i, part := range formatParts {
-		processPart(part)
-
-		if i != len(formatParts)-1 {
-			formatNew += "_"
-		}
+	for key, val := range replacer {
+		formatNew = strings.ReplaceAll(formatNew, key, val)
 	}
 
 	return formatNew
+}
+
+func sanitizeText(text string, regex *regexp.Regexp, maxLen int) string {
+	cleaned := ""
+	remaining := maxLen
+	for _, char := range text {
+		charStr := string(char)
+		if regex.MatchString(charStr) {
+			charStr = "_"
+		}
+		if utf8.RuneCountInString(cleaned)+utf8.RuneCountInString(charStr) > remaining {
+			break
+		}
+		cleaned += charStr
+	}
+	return cleaned
 }
 
 func main() {
