@@ -31,6 +31,7 @@ var (
 	onlyrtw bool
 	onlymtw bool
 	vidz    bool
+	gifs    bool
 	imgs    bool
 	urlOnly bool
 	version = "1.14.2"
@@ -86,6 +87,8 @@ func download(wg *sync.WaitGroup, tweet interface{}, url string, filetype string
 			f, _ = os.Create(output + "/img/RE-" + name)
 		} else if filetype == "rtvideo" {
 			f, _ = os.Create(output + "/video/RE-" + name)
+		} else if filetype == "rtgif" {
+			f, _ = os.Create(output + "/gif/RE-" + name)
 		} else {
 			f, _ = os.Create(output + "/" + filetype + "/" + name)
 		}
@@ -109,6 +112,30 @@ func videoUser(wait *sync.WaitGroup, tweet *twitterscraper.TweetResult, output s
 	if len(tweet.Videos) > 0 {
 		for _, i := range tweet.Videos {
 			url := strings.Split(i.URL, "?")[0]
+			if tweet.IsRetweet {
+				if rt || onlyrtw {
+					wg.Add(1)
+					go download(&wg, tweet, url, "video", output, "user")
+					continue
+				} else {
+					continue
+				}
+			} else if onlyrtw {
+				continue
+			}
+			wg.Add(1)
+			go download(&wg, tweet, url, "video", output, "user")
+		}
+		wg.Wait()
+	}
+}
+
+func gifUser(wait *sync.WaitGroup, tweet *twitterscraper.TweetResult, output string, rt bool) {
+	defer wait.Done()
+	wg := sync.WaitGroup{}
+	if len(tweet.GIFs) > 0 {
+		for _, i := range tweet.GIFs {
+			url := i.URL
 			if tweet.IsRetweet {
 				if rt || onlyrtw {
 					wg.Add(1)
@@ -164,6 +191,26 @@ func videoSingle(tweet *twitterscraper.Tweet, output string) {
 			if usr != "" {
 				wg.Add(1)
 				go download(&wg, tweet, url, "rtvideo", output, "user")
+			} else {
+				wg.Add(1)
+				go download(&wg, tweet, url, "tweet", output, "tweet")
+			}
+		}
+		wg.Wait()
+	}
+}
+
+func gifSingle(tweet *twitterscraper.Tweet, output string) {
+	if tweet == nil {
+		return
+	}
+	if len(tweet.GIFs) > 0 {
+		wg := sync.WaitGroup{}
+		for _, i := range tweet.GIFs {
+			url := i.URL
+			if usr != "" {
+				wg.Add(1)
+				go download(&wg, tweet, url, "rtgif", output, "user")
 			} else {
 				wg.Add(1)
 				go download(&wg, tweet, url, "tweet", output, "tweet")
@@ -320,11 +367,15 @@ func singleTweet(output string, id string) {
 		if vidz {
 			videoSingle(tweet, output)
 		}
+		if gifs {
+			gifSingle(tweet, output)
+		}
 		if imgs {
 			photoSingle(tweet, output)
 		}
 	} else {
 		videoSingle(tweet, output)
+		gifSingle(tweet, output)
 		photoSingle(tweet, output)
 	}
 }
@@ -402,7 +453,8 @@ func main() {
 	op.On("-n", "--nbr NBR", "Number of tweets to download", &nbr)
 	op.On("-i", "--img", "Download images only", &imgs)
 	op.On("-v", "--video", "Download videos only", &vidz)
-	op.On("-a", "--all", "Download images and videos", &all)
+	op.On("-g", "--gif", "Download gifs only", &gifs)
+	op.On("-a", "--all", "Download images, videos and gifs", &all)
 	op.On("-r", "--retweet", "Download retweet too", &retweet)
 	op.On("-z", "--url", "Print media url without download it", &urlOnly)
 	op.On("-R", "--retweet-only", "Download only retweet", &onlyrtw)
@@ -438,10 +490,11 @@ func main() {
 	}
 	if all {
 		vidz = true
+		gifs = true
 		imgs = true
 	}
-	if !vidz && !imgs && single == "" {
-		fmt.Println("You must specify what to download. (-i --img) for images, (-v --video) for videos or (-a --all) for both")
+	if !vidz && !gifs && !imgs && single == "" {
+		fmt.Println("You must specify what to download. (-i --img) for images, (-v --video) for videos, (-g --gif) for gifs or (-a --all) for both")
 		op.Help()
 		os.Exit(1)
 	}
@@ -509,6 +562,9 @@ func main() {
 	if vidz {
 		os.MkdirAll(output+"/video", os.ModePerm)
 	}
+	if gifs {
+		os.MkdirAll(output+"/gif", os.ModePerm)
+	}
 	if imgs {
 		os.MkdirAll(output+"/img", os.ModePerm)
 	}
@@ -530,6 +586,10 @@ func main() {
 		if vidz {
 			wg.Add(1)
 			go videoUser(&wg, tweet, output, retweet)
+		}
+		if gifs {
+			wg.Add(1)
+			go gifUser(&wg, tweet, output, retweet)
 		}
 		if imgs {
 			wg.Add(1)

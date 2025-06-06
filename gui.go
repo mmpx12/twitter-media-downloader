@@ -24,7 +24,8 @@ var (
 	media_type = map[int]string{
 		0: "all",
 		1: "videos",
-		2: "pictures",
+		2: "gifs",
+		3: "pictures",
 	}
 )
 
@@ -190,8 +191,9 @@ func UserDownload() ui.Control {
 	Form.Append("Username: ", Username, false)
 
 	media := ui.NewCombobox()
-	media.Append("pictures & videos")
+	media.Append("all")
 	media.Append("videos only")
+	media.Append("gifs only")
 	media.Append("pictures only")
 	media.SetSelected(0)
 	Form.Append("Media to download: ", media, false)
