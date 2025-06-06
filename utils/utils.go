@@ -108,6 +108,9 @@ func UserTDownload(opt Opts) {
 		if opt.Media == "videos" || opt.Media == "all" {
 			go videoUser(&wg, tweet, opt)
 		}
+		if opt.Media == "gifs" || opt.Media == "all" {
+			go gifUser(&wg, tweet, opt)
+		}
 		if opt.Media == "pictures" || opt.Media == "all" {
 			go photoUser(&wg, tweet, opt)
 		}
@@ -129,6 +132,20 @@ func videoUser(wg *sync.WaitGroup, tweet *twitterscraper.TweetResult, opt Opts) 
 			v := vidUrl(j)
 			wg.Add(1)
 			go download(wg, v, opt.Output, opt.Username, GUI)
+		}
+	}
+}
+
+func gifUser(wg *sync.WaitGroup, tweet *twitterscraper.TweetResult, opt Opts) {
+	if len(tweet.GIFs) > 0 {
+		if tweet.IsRetweet && (opt.Retweet || opt.Retweet_only) {
+			opt.Tweet_id = tweet.ID
+			opt.Output = opt.Output + "/" + opt.Username
+			SingleTDownload(wg, opt, true, false)
+		}
+		for _, i := range tweet.GIFs {
+			wg.Add(1)
+			go download(wg, i.URL, opt.Output, opt.Username, GUI)
 		}
 	}
 }
