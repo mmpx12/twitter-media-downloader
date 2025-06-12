@@ -18,7 +18,8 @@ import (
 	"sync"
 	"time"
 	"unicode/utf8"
-
+	"io/ioutil"
+	"path/filepath"
 	twitterscraper "github.com/imperatrona/twitter-scraper"
 	"github.com/mmpx12/optionparser"
 )
@@ -49,9 +50,32 @@ func download(wg *sync.WaitGroup, tweet interface{}, url string, filetype string
 		segments := strings.Split(name, "?")
 		name = segments[len(segments)-2]
 	}
+	
+	baseName := strings.TrimSuffix(name, filepath.Ext(name))
 	if format != "" {
-		name = getFormat(tweet) + "_" + name
+		baseName = getFormat(tweet)
 	}
+	
+	// Get tweet text
+	var tweetText string
+	switch t := tweet.(type) {
+	case *twitterscraper.TweetResult:
+		tweetText = t.Text
+	case *twitterscraper.Tweet:
+		tweetText = t.Text
+	}
+	
+	if tweetText != "" {
+		textFileName := baseName + ".txt"
+		if dwn_type == "user" {
+			os.MkdirAll(output+"/"+filetype, os.ModePerm)
+			ioutil.WriteFile(output+"/"+filetype+"/"+textFileName, []byte(tweetText), 0644)
+		} else {
+			ioutil.WriteFile(output+"/"+textFileName, []byte(tweetText), 0644)
+		}
+	}
+	
+	name = baseName + filepath.Ext(name)
 	if urlOnly {
 		fmt.Println(url)
 		time.Sleep(2 * time.Millisecond)
