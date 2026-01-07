@@ -95,6 +95,14 @@ sudo make all
 sudo make clean
 ```
 
+#### Arch Linux(AUR):
+
+Install the latest git version
+`paru -S twitter-media-downloader-git`
+
+Or install the pre-built binary version
+`paru -S twitter-media-downloader-bin`
+
 #### Gui (outdated):
 
 ```sh
