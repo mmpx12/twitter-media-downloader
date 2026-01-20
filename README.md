@@ -20,7 +20,8 @@ Usage:
 -n, --nbr=NBR                Number of tweets to download
 -i, --img                    Download images only
 -v, --video                  Download videos only
--a, --all                    Download images and videos
+-g, --gif                    Download gifs only
+-a, --all                    Download images, videos and gifs
 -r, --retweet                Download retweet too
 -z, --url                    Print media url without download it
 -R, --retweet-only           Download only retweet
